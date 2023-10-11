@@ -7,30 +7,25 @@ A shell script for setting up Ubuntu dev environment.
 Place `setup_ubuntu.sh` to `~/` (i.e. home folder).
 Run `~/setup_ubuntu.sh`.
 
-## What's installed?
+## List of installation
 
-- Apps
-   - Ubuntu-unity-desktop
-   - JetBrains CLion IDE
-   - JetBrains PyCharm Community IDE
+- IDEs / Browsers
    - Microsoft Visual Studio Code
-   - Microsoft Todo
-   - Microsoft Teams
-   - Notion
    - Google Chrome
+- Productivities
+   - Microsoft Todo
    - TeamViewer
+   - Dropbox
    - kolourpaint
    - peek
 - Dev essentials
    - Python3
-   - Golang
-   - Rust
+   - miniconda3
    - C++
 - Terminal / Shell
+   - tilix
    - zsh
-   - prezto
+   - power10k
    - tmux
-   - Alacritty
-   - GitHub CLI (gh)
 - Container
    - Docker
