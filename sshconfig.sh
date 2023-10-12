@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# before running, command chmod +x sshconfig.sh
-
 # make sure config file exists
 ssh_dir="$HOME/.ssh"
 [ -d "$ssh_dir" ] || mkdir -m 700 "$ssh_dir"
