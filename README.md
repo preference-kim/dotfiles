@@ -25,7 +25,7 @@ Run `~/setup_ubuntu.sh`.
 - Terminal / Shell
    - tilix
    - zsh
-   - power10k
+   - <del>powerlevel10k</del> -> _please install it manually_: [LINK](https://github.com/romkatv/powerlevel10k#meslo-nerd-font-patched-for-powerlevel10k)
    - tmux
 - Container
    - Docker
