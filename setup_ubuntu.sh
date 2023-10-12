@@ -26,9 +26,24 @@ wget -nc https://download.teamviewer.com/download/linux/teamviewer_amd64.deb # T
 sudo apt -y install ./teamviewer_amd64.deb
 sudo rm -rf ./teamviewer_amd64.deb
 
-wget -0 - "https://www.dropbox.com/download?dl=packages/ubuntu/dropbox_2020.03.04_amd64.deb" #Dropbox
-sudo apy -y install ./dropbox_2020.03.04_amd64.deb
+#Dropbox
+wget -O dropbox_2020.03.04_amd64.deb "https://www.dropbox.com/download?dl=packages/ubuntu/dropbox_2020.03.04_amd64.deb"
+sudo apt -y install ./dropbox_2020.03.04_amd64.deb
 sudo rm -rf ./dropbox_2020.03.04_amd64.deb
+
+remote_key_file=https://linux.dropbox.com/fedora/rpm-public-key.asc # https://fabianlee.org/2022/12/21/ubuntu-fix-apt-warning-for-dropbox-with-key-in-legacy-keyring/
+
+# Dropbox - validate same ownership as original, and newer expiration date
+sudo apt install pgpdump -y
+curl -s $remote_key_file | pgpdump | grep -E "User ID -|expiration" -A1
+
+# Dropbox - save new PGP key
+curl -s $remote_key_file | sudo tee /usr/share/keyrings/dropbox.asc
+sudo chmod 644 /usr/share/keyrings/dropbox.asc
+
+# Dropbox - find dropbox apt repo definition to edit
+domain=linux.dropbox.com
+sudo grep -srl $domain /etc/apt | grep -v save
 
 # Install essentials
 sudo apt-get -y install build-essential cmake git wget curl pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev
@@ -112,4 +127,12 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 
 # Finished
+echo ":::::::::::::::::::::::  fin  :::::::::::::::::::::::"
+echo ""
+echo "but here's some instruction for Dropbox"
+echo "plz edit the file found by sudo vi <theFoundFile>, See https://fabianlee.org/2022/12/21/ubuntu-fix-apt-warning-for-dropbox-with-key-in-legacy-keyring/"
+echo "... edit as 'deb [arch=i386,amd64 signed-by=/usr/share/keyrings/dropbox.asc] http://linux.dropbox.com/ubuntu disco main'"
+echo ""
+echo "for miniconda initialization, execute the commands on botton of this link(https://docs.conda.io/projects/miniconda/en/latest/) after zsh setting"
+echo ""
 echo "Now reboot system to apply changes"
