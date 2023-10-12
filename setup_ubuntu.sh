@@ -1,18 +1,20 @@
 #!/bin/bash 
 
+cd ~
+
 # Update system
 sudo apt-get -y update
 sudo apt-get -y upgrade
 
 # Install programs
-sudo apt-get -y install ubuntu-unity-desktop # Ubuntu renderer
-sudo snap install clion --classic # CLion IDE
-sudo snap install pycharm-community --classic # Pycharm Community IDE
+# sudo apt-get -y install ubuntu-unity-desktop # Ubuntu renderer
+# sudo snap install clion --classic # CLion IDE
+# sudo snap install pycharm-community --classic # Pycharm Community IDE
 sudo snap install --classic code # Visual studio code
 sudo snap install ao # Microsoft Todo
-sudo snap install slack --classic # Slack
-sudo snap install teams # Microsoft Teams
-sudo snap install notion-snap # Notion
+# sudo snap install slack --classic # Slack
+# sudo snap install teams # Microsoft Teams
+# sudo snap install notion-snap # Notion
 sudo apt-get -y install kolourpaint # kolourpaint
 sudo apt-get -y install peek # peek
 
@@ -20,49 +22,61 @@ wget -nc https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
 sudo apt -y install ./google-chrome-stable_current_amd64.deb
 sudo rm -rf ./google-chrome-stable_current_amd64.deb
 
-wget -nc https://download.teamviewer.com/download/linux/teamviewer_amd64.deb
+wget -nc https://download.teamviewer.com/download/linux/teamviewer_amd64.deb # Teamviewer
 sudo apt -y install ./teamviewer_amd64.deb
 sudo rm -rf ./teamviewer_amd64.deb
 
+wget -0 - "https://www.dropbox.com/download?dl=packages/ubuntu/dropbox_2020.03.04_amd64.deb" #Dropbox
+sudo apy -y install ./dropbox_2020.03.04_amd64.deb
+sudo rm -rf ./dropbox_2020.03.04_amd64.deb
+
 # Install essentials
 sudo apt-get -y install build-essential cmake git wget curl pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev
+
+mkdir -p ~/miniconda3 # miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+rm -rf ~/miniconda3/miniconda.sh
 
 # Python
 sudo apt-get -y install python3 python3-pip
 
 # Golang
-snap install --classic go
+# snap install --classic go
 
 # Terminal
-sudo apt-get -y install zsh # zsh
+
+sudo apt -y install tilix # tilix
+
+sudo apt-get -y install zsh # zsh # ** plz manually install powerlevel10k
 echo "(setup_ubuntu.sh) : Setup zsh, and exit!"
 zsh
 
-sudo rm -rf ${ZDOTDIR:-$HOME}/.zprezto
-git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto" # prezto
-echo "" >> ~/.zshrc
-echo "# prezto\n" >> ~/.zshrc
-echo "source \"${ZDOTDIR:-$HOME}/.zprezto/init.zsh\"" >> ~/.zshrc
-chsh -s /bin/zsh
+# sudo rm -rf ${ZDOTDIR:-$HOME}/.zprezto
+# git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto" # prezto
+# echo "" >> ~/.zshrc
+# echo "# prezto\n" >> ~/.zshrc
+# echo "source \"${ZDOTDIR:-$HOME}/.zprezto/init.zsh\"" >> ~/.zshrc
+# chsh -s /bin/zsh
 
 sudo apt-get -y install tmux # tmux
 
 # Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup override set stable
-rustup update stable
+# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# rustup override set stable
+# rustup update stable
 
 # C++
 sudo apt-get -y install cmake ninja-build
 
 # Terminal App (Alacritty)
-git clone https://github.com/alacritty/alacritty.git # Alacritty
-cd alacritty
-cargo build --release
-sudo cp target/release/alacritty /usr/local/bin
-sudo cp extra/logo/alacritty-term.svg /usr/share/pixmaps/Alacritty.svg
-sudo desktop-file-install extra/linux/Alacritty.desktop
-sudo update-desktop-database
+# git clone https://github.com/alacritty/alacritty.git # Alacritty
+# cd alacritty
+# cargo build --release
+# sudo cp target/release/alacritty /usr/local/bin
+# sudo cp extra/logo/alacritty-term.svg /usr/share/pixmaps/Alacritty.svg
+# sudo desktop-file-install extra/linux/Alacritty.desktop
+# sudo update-desktop-database
 
 # Docker
 sudo apt-get -y remove docker docker-engine docker.io containerd runc
@@ -77,10 +91,10 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 
 # GitHub CLI
-curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-sudo apt-get -y update
-sudo apt-get -y install gh
+# curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+# echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+# sudo apt-get -y update
+# sudo apt-get -y install gh
 
 # Nvidia-docker
 sudo systemctl --now enable docker
