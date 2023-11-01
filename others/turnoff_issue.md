@@ -14,3 +14,12 @@ I solved it by adding acpi=force to the grub configuration.
 ```
 
 And now it shuts down cleanly!
+
+## Additional info
+
+<https://askubuntu.com/questions/1481452/ubuntu-22-04-3-lts-wont-power-off>
+<https://askubuntu.com/questions/1481221/ubuntu-desktop-disappear-on-reboot-ubuntu-22-04/>
+
+and i followed below instruction
+
+<https://www.reddit.com/r/debian/comments/g46dip/activation_via_systemd_failed_for_unit/>
