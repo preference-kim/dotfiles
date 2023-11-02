@@ -32,13 +32,11 @@ And now it shuts down cleanly!
 
 걍 다운 그레이드 귀찮아서 안함
 
-## Additional info
-
-<https://askubuntu.com/questions/1481452/ubuntu-22-04-3-lts-wont-power-off>
-<https://askubuntu.com/questions/1481221/ubuntu-desktop-disappear-on-reboot-ubuntu-22-04/>
-
-and i followed below instruction
-
-<https://www.reddit.com/r/debian/comments/g46dip/activation_via_systemd_failed_for_unit/>
-
-sudo apt-get remove rtkit
+### After that,,,,
+- I took several trials and my PC has gone:(
+- so I reset my PC as ubuntu22.04, and linux kernel 6.5.9
+  - you can find a good reference for updating kernel from [HERE](https://www.howtoforge.com/how-to-install-linux-kernel-6-on-ubuntu-22-04/)
+- nvidia driver has been downloaded by `ubuntu-drivers autoinstall`
+  - after that, i had to take following bash command: `dpkg-reconfigure nvidia-dkms-5XX` (5XX should be changed to your driver version [REFERENCE](https://askubuntu.com/questions/1153023/error-nvidia-driver-is-not-loaded))
+  - it's recommended to disable nouveau by following the [LINK](https://askubuntu.com/questions/841876/how-to-disable-nouveau-kernel-driver)
+- And I found that `prime-select is SHIT`. i think the most errors come from here
