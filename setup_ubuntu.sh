@@ -46,7 +46,7 @@ domain=linux.dropbox.com
 sudo grep -srl $domain /etc/apt | grep -v save
 
 # Install essentials
-sudo apt-get -y install build-essential cmake git wget curl pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev
+sudo apt-get -y install build-essential cmake git wget curl pkg-config libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev libxkbcommon-dev libglib2.0-dev
 
 mkdir -p ~/miniconda3 # miniconda3
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
@@ -64,8 +64,7 @@ sudo apt-get -y install python3 python3-pip
 sudo apt -y install tilix # tilix
 
 sudo apt-get -y install zsh # zsh # ** plz manually install powerlevel10k
-echo "(setup_ubuntu.sh) : Setup zsh, and exit!"
-zsh
+echo "(setup_ubuntu.sh) : Setup zsh, and exit!" #zsh
 
 # sudo rm -rf ${ZDOTDIR:-$HOME}/.zprezto
 # git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto" # prezto
@@ -133,6 +132,6 @@ echo "but here's some instruction for Dropbox"
 echo "plz edit the file found by sudo vi <theFoundFile>, See https://fabianlee.org/2022/12/21/ubuntu-fix-apt-warning-for-dropbox-with-key-in-legacy-keyring/"
 echo "... edit as 'deb [arch=i386,amd64 signed-by=/usr/share/keyrings/dropbox.asc] http://linux.dropbox.com/ubuntu disco main'"
 echo ""
-echo "for miniconda initialization, execute the commands on botton of this link(https://docs.conda.io/projects/miniconda/en/latest/) after zsh setting"
+echo "for miniconda initialization, execute the commands on bottom of this link(https://docs.conda.io/projects/miniconda/en/latest/) after zsh setting"
 echo ""
 echo "Now reboot system to apply changes"

@@ -57,3 +57,14 @@ And now it shuts down cleanly!
   ```bash
     sudo update-grub
   ```
+  
+### enable nvidia-settings to change xorg conf
+
+<https://kwonnam.pe.kr/wiki/linux/nvidia>
+
+sudo chmod +x /usr/share/screen-resolution-extra/nvidia-polkit
+
+uhm just see above link
+
+### back to the turnoff issue
+sudo systemctl disable systemd-journald.service
