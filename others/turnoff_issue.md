@@ -40,3 +40,20 @@ And now it shuts down cleanly!
   - after that, i had to take following bash command: `dpkg-reconfigure nvidia-dkms-5XX` (5XX should be changed to your driver version [REFERENCE](https://askubuntu.com/questions/1153023/error-nvidia-driver-is-not-loaded))
   - it's recommended to disable nouveau by following the [LINK](https://askubuntu.com/questions/841876/how-to-disable-nouveau-kernel-driver)
 - And I found that `prime-select is SHIT`. i think the most errors come from here
+- I disable hybrid usage of graphics in BIOS
+- now my grub config is as below:
+  ```bash
+      sudo vim /etc/default/grub
+  ```
+  ```plain
+    GRUB_DISABLE_OS_PROBER=false
+    GRUB_DEFAULT=saved
+    GRUB_TIMEOUT_STYLE=hidden
+    GRUB_TIMEOUT=5
+    GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
+    GRUB_CMDLINE_LINUX_DEFAULT="quiet splash reboot=e" #acpi=force? noirq? pci=noacpi?
+    GRUB_CMDLINE_LINUX=""
+  ```
+  ```bash
+    sudo update-grub
+  ```
