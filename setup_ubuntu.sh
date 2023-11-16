@@ -92,38 +92,39 @@ sudo apt-get -y install cmake ninja-build
 # sudo desktop-file-install extra/linux/Alacritty.desktop
 # sudo update-desktop-database
 
-# Docker
-sudo apt-get -y remove docker docker-engine docker.io containerd runc
-sudo apt-get -y install ca-certificates curl gnupg lsb-release
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-sudo apt-get -y install docker-ce docker-ce-cli containerd.io
-sudo groupadd docker
-sudo usermod -aG docker $USER
+# Docker installation should be reviewed
+# # Docker 
+# sudo apt-get -y remove docker docker-engine docker.io containerd runc
+# sudo apt-get -y install ca-certificates curl gnupg lsb-release
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+# echo \
+#   "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+#   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# sudo apt-get update
+# sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+# sudo groupadd docker
+# sudo usermod -aG docker $USER
 
-# GitHub CLI
-# curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-# echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+# # GitHub CLI
+# # curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+# # echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+# # sudo apt-get -y update
+# # sudo apt-get -y install gh
+
+# # Nvidia-docker
+# sudo systemctl --now enable docker
+
+# distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+#       && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+#       && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+#             sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+#             sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
 # sudo apt-get -y update
-# sudo apt-get -y install gh
 
-# Nvidia-docker
-sudo systemctl --now enable docker
-
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
-      && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-      && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
-            sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-            sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-
-sudo apt-get -y update
-
-sudo apt-get install -y nvidia-container-toolkit
-sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker
+# sudo apt-get install -y nvidia-container-toolkit
+# sudo nvidia-ctk runtime configure --runtime=docker
+# sudo systemctl restart docker
 
 # Finished
 echo ":::::::::::::::::::::::  fin  :::::::::::::::::::::::"
