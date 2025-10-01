@@ -1,0 +1,12 @@
+{
+  "clangd.arguments": [
+    // Specify the directory containing compile_commands.json
+    "--compile-commands-dir=.vscode",
+    
+    // Format JSON output with indentation and line breaks for better readability
+    "--pretty",
+    
+    // Enable inlay hints - shows type info and parameter names inline in the editor
+    "--inlay-hints=true"
+  ]
+}
