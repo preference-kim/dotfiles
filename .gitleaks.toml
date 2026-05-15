@@ -1,0 +1,19 @@
+title = "gitleaks config"
+
+[[rules]]
+id = "generic-password"
+description = "Detect passwords"
+regex = '''(?i)(password|passwd|pwd)\s*[=:]\s*['"]?[^\s'"]+'''
+tags = ["password"]
+
+[[rules]]
+id = "generic-secret"
+description = "Detect secrets"
+regex = '''(?i)(secret|token|key|credential)\s*[=:]\s*['"]?[^\s'"]+'''
+tags = ["secret"]
+
+[allowlist]
+paths = [
+    '''\.gitleaks\.toml$''',
+    '''openfortivpn-daemon\.sh$''',
+]
