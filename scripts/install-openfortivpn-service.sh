@@ -2,7 +2,11 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DAEMON_SCRIPT="$SCRIPT_DIR/openfortivpn-daemon.sh"
+SECRETS_SRC="$SCRIPT_DIR/../.secrets"
+DAEMON_SRC="$SCRIPT_DIR/openfortivpn-daemon.sh"
+INSTALL_DIR="/usr/local/etc/openfortivpn"
+DAEMON_SCRIPT="$INSTALL_DIR/openfortivpn-daemon.sh"
+SECRETS_FILE="$INSTALL_DIR/.secrets"
 PLIST_PATH="/Library/LaunchDaemons/com.openfortivpn.plist"
 
 if [ "$EUID" -ne 0 ]; then
@@ -10,9 +14,21 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+if [ ! -f "$SECRETS_SRC" ]; then
+    echo "Error: .secrets 파일이 없습니다: $SECRETS_SRC"
+    exit 1
+fi
+
 killall openfortivpn 2>/dev/null && echo "기존 openfortivpn 프로세스 종료" || true
 
 launchctl unload "$PLIST_PATH" 2>/dev/null || true
+
+mkdir -p "$INSTALL_DIR"
+cp "$DAEMON_SRC" "$DAEMON_SCRIPT"
+cp "$SECRETS_SRC" "$SECRETS_FILE"
+chmod 700 "$INSTALL_DIR"
+chmod 700 "$DAEMON_SCRIPT"
+chmod 600 "$SECRETS_FILE"
 
 cat > "$PLIST_PATH" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>

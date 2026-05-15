@@ -1,5 +1,5 @@
 #!/bin/bash
-SECRETS_FILE="$(dirname "$0")/../.secrets"
+SECRETS_FILE="$(dirname "$0")/.secrets"
 if [ ! -f "$SECRETS_FILE" ]; then
     echo "Error: .secrets file not found at $SECRETS_FILE" >&2
     exit 1
