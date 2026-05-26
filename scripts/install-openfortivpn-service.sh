@@ -26,6 +26,22 @@ if [ ! -f "$SECRETS_SRC" ]; then
     exit 1
 fi
 
+source "$SECRETS_SRC"
+
+require_secret() {
+    local name="$1"
+    if [ -z "${!name:-}" ]; then
+        echo "Error: $name 값이 .secrets에 없습니다: $SECRETS_SRC"
+        exit 1
+    fi
+}
+
+require_secret FORTIVPN_HOST
+require_secret FORTIVPN_TRUSTED_CERT
+require_secret FORTIVPN_USERNAME
+require_secret FORTIVPN_PASSWORD
+require_secret VPN_WATCH_TARGET
+
 if [ ! -f "$CHECK_SRC" ]; then
     echo "Error: checker 스크립트가 없습니다: $CHECK_SRC"
     exit 1

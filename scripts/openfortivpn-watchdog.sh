@@ -1,9 +1,24 @@
 #!/bin/bash
 set -u
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SECRETS_FILE="${VPN_SECRETS_FILE:-${FORTIVPN_SECRETS_FILE:-$SCRIPT_DIR/.secrets}}"
+if [ ! -f "$SECRETS_FILE" ] && [ -f "$SCRIPT_DIR/../.secrets" ]; then
+    SECRETS_FILE="$SCRIPT_DIR/../.secrets"
+fi
+
+VPN_WATCH_TARGET_ENV="${VPN_WATCH_TARGET:-}"
+if [ -f "$SECRETS_FILE" ]; then
+    set +u
+    source "$SECRETS_FILE"
+    set -u
+fi
+[ -z "$VPN_WATCH_TARGET_ENV" ] || VPN_WATCH_TARGET="$VPN_WATCH_TARGET_ENV"
+unset VPN_WATCH_TARGET_ENV
+
 LABEL="${VPN_SERVICE_LABEL:-com.openfortivpn}"
 CHECK_SCRIPT="${VPN_CHECK_SCRIPT:-/usr/local/etc/openfortivpn/openfortivpn-check.sh}"
-WATCH_TARGET="${VPN_WATCH_TARGET:-ssh-alias-or-host}"
+WATCH_TARGET="${VPN_WATCH_TARGET:-}"
 CHECK_TIMEOUT="${VPN_CHECK_TIMEOUT:-3}"
 COOLDOWN="${VPN_WATCH_COOLDOWN:-300}"
 STAMP_FILE="${VPN_WATCH_STAMP:-/var/run/openfortivpn-watchdog.last_restart}"
@@ -11,6 +26,11 @@ STAMP_FILE="${VPN_WATCH_STAMP:-/var/run/openfortivpn-watchdog.last_restart}"
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S%z') openfortivpn-watchdog: $*"
 }
+
+if [ -z "$WATCH_TARGET" ]; then
+    log "VPN_WATCH_TARGET is required in the environment or $SECRETS_FILE"
+    exit 1
+fi
 
 if [ ! -x "$CHECK_SCRIPT" ]; then
     log "check script is missing or not executable: $CHECK_SCRIPT"

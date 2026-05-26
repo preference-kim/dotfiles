@@ -31,12 +31,15 @@ maintenance scripts. Keep changes portable, conservative, and safe to publish.
 The OpenFortiVPN launchd setup lives in `scripts/`.
 
 - `scripts/openfortivpn-daemon.sh` starts OpenFortiVPN using the installed
-  `.secrets` file.
+  `.secrets` file; do not hardcode VPN endpoints, usernames, or certificate
+  hashes in the script.
 - `scripts/install-openfortivpn-service.sh` installs the daemon, checker, and
   watchdog scripts under `/usr/local/etc/openfortivpn`, writes LaunchDaemons,
   and restarts the service.
 - `scripts/openfortivpn-check.sh` checks the VPN process, `ppp0`, route
   selection, TCP reachability, and optional SSH reachability.
+- `.secrets.example` documents the required local-only keys. Keep real values
+  in ignored `.secrets`.
 
 Run the installer only when a VPN service restart is intended:
 
