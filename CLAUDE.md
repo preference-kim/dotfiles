@@ -32,7 +32,11 @@ The OpenFortiVPN launchd setup lives in `scripts/`.
 
 - `scripts/openfortivpn-daemon.sh` starts OpenFortiVPN using the installed
   `.secrets` file; do not hardcode VPN endpoints, usernames, or certificate
-  hashes in the script.
+  hashes in the script. It waits (up to `FORTIVPN_READY_TIMEOUT`, default 60s)
+  for the network and gateway DNS to be ready before launching, so a boot or
+  reconnect race does not fast-fail into the launchd throttle window. The
+  LaunchDaemon uses a short `ThrottleInterval` (15s) as a backstop, so the VPN
+  recovers within seconds after a reboot or disconnect.
 - `scripts/install-openfortivpn-service.sh` installs the daemon, checker, and
   watchdog scripts under `/usr/local/etc/openfortivpn`, writes LaunchDaemons,
   and restarts the service.

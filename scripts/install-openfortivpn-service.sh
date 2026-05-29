@@ -89,8 +89,13 @@ cat > "$PLIST_PATH" << PLIST
     <true/>
     <key>KeepAlive</key>
     <true/>
+    <!-- Short throttle so a transient failure recovers within seconds. The
+         daemon script waits for network/DNS readiness before launching
+         openfortivpn, so this rarely fires; it is only a backstop. Raise to
+         20-30 if a permanent error (e.g. bad credentials) risks account
+         lockout from ~15s retries. -->
     <key>ThrottleInterval</key>
-    <integer>300</integer>
+    <integer>15</integer>
     <key>StandardOutPath</key>
     <string>/var/log/openfortivpn.log</string>
     <key>StandardErrorPath</key>
