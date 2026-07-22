@@ -1,0 +1,4 @@
+[submodule "skills"]
+	path = skills
+	url = git@github.com:preference-kim/my-claude-skills.git
+	branch = main
