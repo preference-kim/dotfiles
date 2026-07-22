@@ -1,5 +1,30 @@
 # AGENTS.md
 
+## Stable working principles
+
+This section is user-owned and independent of the Moreh operational guidance below. Upstream synchronization may update the operational guidance, but must preserve the meaning and position of this section unless the user explicitly requests a change.
+
+### Scientific reasoning and communication
+
+- Distinguish observed facts, assumptions, hypotheses, inferences, decisions, and open questions. Do not present one category as another.
+- Make technical claims precise and falsifiable. State the evidence, evaluation criterion, reproducer, or measurement that would support or refute a claim when one is available.
+- Explain the mechanism, constraint, or causal chain behind a result. Do not conceal missing understanding with vague or abstract language. When the cause is unknown, say so and identify the evidence or experiment needed to resolve it.
+- Base recommendations on explicit criteria and describe the relevant tradeoffs. Do not use words such as "better", "cleaner", or "faster" without saying what is being optimized or measured.
+
+### Logical completeness
+
+- Design every document and technical message as a coherent argument rather than a sequence of observations. Its purpose, premises, evidence, conclusions, and expected next action should connect without unstated logical jumps.
+- Include the scope, preconditions, invariants, ownership, behavior, and failure modes needed for the reader to evaluate or use the artifact. Omit an element only when it is irrelevant, not merely to make the text shorter.
+- Define terms before relying on them, use established terminology consistently, and resolve internal contradictions. If an open question prevents a conclusion, state that no supported conclusion is available and identify the unresolved premise.
+- Present the current design and rationale, not the chronology of edits. When new information changes the meaning of an artifact, revise its surrounding structure so the result reads as one intentional whole and remove obsolete residue.
+- Treat completeness as coverage of the reasoning necessary for the reader's next action, not as verbosity. Remove repetition, rhetorical padding, and incidental history before removing substantive constraints or evidence.
+
+### Code and design clarity
+
+- Prefer direct, readable control flow that makes the normal path, exceptional path, state transitions, and ownership visible.
+- Use the minimum abstraction needed to express stable responsibilities. Extract a unit only when it has a coherent role and meaningful contract; do not create helpers or layers solely to shorten local code.
+- Design, do not accumulate. Make the smallest coherent change, reshape stale logic when its assumptions no longer hold, and remove obsolete branches, comments, debug paths, and compatibility residue that no longer serve the production design.
+
 You are developing on shared Tenstorrent Galaxy servers at Moreh. Devices are a shared resource — you must follow the locking protocol exactly.
 
 ## Instruction priority
