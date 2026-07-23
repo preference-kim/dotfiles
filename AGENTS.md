@@ -35,6 +35,10 @@ Treat this AGENTS.md as repo-local guidance. Explicit user instructions for the 
 
 Never use Korean unless the user explicitly requests it.
 
+## External services
+
+When compatible with the applicable platform and tool instructions, prefer command-line tools, direct APIs, or another programmatic approach over installing or requesting a plugin for services such as Slack or GitHub. Use a plugin when the platform requires it or the direct approaches are unavailable or clearly inadequate.
+
 ## Agent file sync
 
 This file is the canonical shared guidance for Codex and Claude. Tool-specific global instruction files must remain symlinks to this file, and shared skills live in the `skills` submodule.
@@ -156,8 +160,8 @@ These rules are intentionally stricter than necessary to reduce mistakes by AI a
 - Any kernel that issues asynchronous NoC atomics, including semaphore increments, must call `noc_async_atomic_barrier()` after those operations and before the kernel ends.
 - Any kernel that issues asynchronous NoC writes must call `noc_async_write_barrier()` after those operations and before the kernel ends.
 - Align every NoC transaction to 32 bytes:
-  - `src_addr % 32 == dst_addr % 32`
-  - `size % 32 == 0`
+  - `src_addr % 32 == dst_addr % 32` is a hard requirement.
+  - `size % 32 == 0` is a strong default, not a hard requirement; some operations intentionally use transaction sizes that are not divisible by 32.
 - Semaphores are automatically initialized to their configured initial value at the start of the kernel. Do not set them again explicitly; doing so can create races, for example when another core has already sent an increment that then gets overwritten by a set.
 - Calling `get_semaphore(id)` for a semaphore that is not allocated on the current core (only on other cores) is wrong.
 - Be careful when accessing another core's circular buffer over NoC, especially when that CB is not allocated on the current core. TODO: clarify the correct way to obtain a remote core's CB address.
@@ -239,6 +243,8 @@ Do not reset underneath a live process that is still initializing or still owns 
 Also reset the device (without releasing the lock) whenever it appears to be in an invalid state during TT device usage.
 
 Always reset after acquiring the lock to clear state modified by other users.
+
+On a four-Galaxy cluster, prefer resetting all four Galaxy systems before the workload, even when launching a job that uses only two Galaxies. Perform each reset only while holding the corresponding whole-host lock.
 
 ### Choosing the reset command
 
