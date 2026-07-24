@@ -39,6 +39,10 @@ Never use Korean unless the user explicitly requests it.
 
 When compatible with the applicable platform and tool instructions, prefer command-line tools, direct APIs, or another programmatic approach over installing or requesting a plugin for services such as Slack or GitHub. Use a plugin when the platform requires it or the direct approaches are unavailable or clearly inadequate.
 
+## Execution location
+
+Unless the user explicitly requests remote execution, run builds, tests, benchmarks, experiments, and other jobs on the host and cluster where the session is already running. Do not use SSH or another remote connection to move a job elsewhere. For example, from `ttdev31`, run the job on `ttdev31`, not `ttdev32`; from AI cluster 1, stay on AI cluster 1 rather than using AI cluster 2.
+
 ## Agent file sync
 
 This file is the canonical shared guidance for Codex and Claude. Tool-specific global instruction files must remain symlinks to this file, and shared skills live in the `skills` submodule.
