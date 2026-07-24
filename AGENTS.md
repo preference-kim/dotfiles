@@ -264,6 +264,14 @@ Run: `python -m tracy -r -p -v main.py`. Tracy prints the path to a generated CS
 
 The CSV has these relevant columns: index 0 = OP CODE, 1 = OP TYPE, 2 = GLOBAL CALL COUNT, 3 = DEVICE ID, 18 = DEVICE KERNEL DURATION [ns]. When analyzing, filter to rows where DEVICE ID is `0` or empty, and extract those five columns. Write a parsing script as needed rather than using a fixed one.
 
+### Separate latency and attribution runs
+
+Do not collect trace-replay wall-clock latency and Tracy device-kernel attribution from the same process:
+
+- For authoritative trace-replay or other host-amortized latency, run a fresh process with `TT_METAL_DEVICE_PROFILER` unset or set to `0`. Device profiling adds instrumentation, SRAM use, and reporting overhead, so profiler-enabled wall time is not an uninstrumented latency result.
+- For per-op or per-kernel attribution, run a separate fresh Tracy process with `TT_METAL_DEVICE_PROFILER=1` and use the reported device durations. Do not reuse that process's wall time as the trace-replay result.
+- Keep inputs, shapes, program configurations, caller-owned buffers, warmup, and replay structure matched between the two runs, and record the profiler state with each artifact. Runtime profiler options are process-global and read at startup, so toggling the environment after TT-Metal initialization does not establish a clean comparison.
+
 ## Benchmarking individual ttnn ops
 
 For measuring a single ttnn op's kernel time, prefer the **trace capture/execute** pattern over Tracy. Trace replay amortizes Python and dispatch overhead across many iterations, so wall-clock time over iterations closely approximates pure device kernel time.
