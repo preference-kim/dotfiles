@@ -43,6 +43,17 @@ When compatible with the applicable platform and tool instructions, prefer comma
 
 Unless the user explicitly requests remote execution, run builds, tests, benchmarks, experiments, and other jobs on the host and cluster where the session is already running. Do not use SSH or another remote connection to move a job elsewhere. For example, from `ttdev31`, run the job on `ttdev31`, not `ttdev32`; from AI cluster 1, stay on AI cluster 1 rather than using AI cluster 2.
 
+## Unexpected errors
+
+Never silently omit an unexpected error. In the next response to the user, briefly report what failed, its impact, and whether or how it was recovered.
+
+## MPI and shared filesystems
+
+- Never change `HOME` to isolate per-rank or per-job artifacts. `HOME` is a session-wide input that may also determine unrelated runtime paths such as cluster descriptors, launch manifests, configuration, credentials, logs, and caches. Use the dedicated cache or artifact variable instead (for example, `TT_METAL_CACHE` for the tt-metal JIT cache).
+- Before assuming that equal path strings collide, verify the filesystem type and mount identity on every participating host. The same path on host-local filesystems names separate objects; on NFS or another shared filesystem it may name the same object.
+- On a shared writable cache, namespace the dedicated cache path by both launch identity (for example, host set, job ID, or configuration fingerprint) and MPI rank. Rank is unique only within its MPI world, so independent jobs can both have ranks 0 through N-1.
+- Before device work, verify the effective host set, MPI world/rank, and relevant paths in every rank. Audit all consumers and SSH/MPI propagation before overriding any process-global environment variable, and keep shared runtime metadata on explicit stable paths.
+
 ## Agent file sync
 
 This file is the canonical shared guidance for Codex and Claude. Tool-specific global instruction files must remain symlinks to this file, and shared skills live in the `skills` submodule.
@@ -196,11 +207,12 @@ TODO: document virtual coordinates, physical coordinates, and the `noc0`/`noc1` 
 
 ### Unit tests
 
-When adding an op, implement these tests:
+When adding an op, implement these tests by default:
 
 - `op_correctness`
 - `op_performance`: use trace-replay-based measurement, not Tracy.
-- `op_breakdown`: include an interleaved L1 debug tensor shaped like `[num_cores, num_slots]`; write values as `debug_l1[slot] = x`. Keep this simple; do not use a fancy `TensorAccessor` here.
+
+The `op_breakdown` test and its L1 debug tensor interface are optional; implement them only when explicitly instructed. When requested, include an interleaved L1 debug tensor shaped like `[num_cores, num_slots]`; write values as `debug_l1[slot] = x`. Keep this simple; do not use a fancy `TensorAccessor` here.
 
 ### Circular buffers
 
@@ -284,6 +296,10 @@ Steps:
 4. Divide elapsed time by total op executions → good approximation of kernel duration with minimal host overhead.
 
 Reserve Tracy for cases where you need per-op breakdowns inside a larger workload.
+
+## EvalScope metrics
+
+Never use, report, compare, or draw conclusions from EvalScope's `Spec. Accept Rate`. It is an approximation inferred from streaming behavior, not the model runtime's real speculative-token acceptance rate. Use only acceptance metrics measured directly by the model or runtime.
 
 ## Misc.
 
