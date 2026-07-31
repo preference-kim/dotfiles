@@ -70,6 +70,10 @@ Exception: for agent-instruction updates in the personal dotfiles and shared ski
 
 When creating a feature branch, use the `sunho/` prefix by default unless the user explicitly requests a different branch name.
 
+## Worktree use
+
+worktree 사용 제한: `git worktree`는 특정 HEAD에 대한 코드 정적 분석 또는 문서 작업에만 사용한다. Build 또는 device를 사용하는 test가 필요한 경우에는 절대 임의로 worktree를 만들지 말고 현재 세션 위치에서만 작업한다. branch checkout이 필요한데 기존 작업이 남아 있어 불가능한 경우에는 해당 작업을 local commit 또는 stash한 뒤 checkout한다.
+
 ## Device Locking
 
 Only use the lock when you are working with https://github.com/moreh-dev/tt-metal and the hostname is supported by `moreh-lock` (for example, the Moreh Galaxy hosts configured in `tools/moreh_lock`).
