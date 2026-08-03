@@ -71,7 +71,7 @@ Never silently omit an unexpected error. In the next response to the user, brief
 
 ## Agent file sync
 
-This file is the canonical shared guidance for Codex and Claude. Tool-specific global instruction files must remain symlinks to this file, and shared skills live in the `skills` submodule.
+This file is the canonical shared guidance for Codex and Claude. Tool-specific global instruction files must remain symlinks to this file. Shared skills live only in the `skills` submodule and are exposed through per-skill links in each tool's real global skills directory so host-local skills can coexist.
 
 At the start of the first user task in each new session, use the `agent-update` skill for its daily refresh. The skill skips work after a successful refresh on the same local calendar day. If it pulls or reconciles changed instructions, re-read the updated AGENTS.md and skill files before continuing.
 
