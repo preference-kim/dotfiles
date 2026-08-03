@@ -273,6 +273,10 @@ These hang-detection rules apply only while running TT device workloads (for exa
 
 If no JIT compilation is running (no `cc1plus` process — only `python`) and there has been no output for more than a minute during an already-running TT device workload, assume the device may be hung. This rule does **not** apply while the process is still in device/runtime initialization (for example importing TTNN, opening devices, initializing Fabric, topology discovery, hugepage setup, or first-time test collection that probes devices). During initialization, wait for a clear runtime failure, a command timeout, or explicit evidence that initialization has stopped progressing before treating it as a device hang.
 
+Galaxy reset can legitimately take several minutes and may produce no output while it is progressing. While the reset process is alive and its own timeout has not expired, do not classify it as hung merely because a generic no-output watchdog elapsed.
+
+Treat an unusually slow reset, or a stall/failure while opening devices after a successful reset, as a device/setup failure on its first occurrence rather than evidence of a branch regression. Briefly report the observed stage and impact, stop any live process before resetting, then reset and retry once under the normal lock protocol unless the task plan or user specifies a different retry budget. Do not count the failed setup attempt as a measurement. Attribute the failure to the branch only when it reproduces from a known-good device state or other evidence connects it to the code; if the device/setup failure repeats, report it as an infrastructure blocker and preserve the relevant logs.
+
 Do not reset underneath a live process that is still initializing or still owns UMD/device mappings. If a reset is needed for a hung TT workload, keep the lock held, stop or let the workload process exit (or run triage from the same lock context when appropriate), then reset and retry.
 
 Also reset the device (without releasing the lock) whenever it appears to be in an invalid state during TT device usage.
