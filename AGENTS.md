@@ -25,6 +25,11 @@ This section is user-owned and independent of the Moreh operational guidance bel
 - Use the minimum abstraction needed to express stable responsibilities. Extract a unit only when it has a coherent role and meaningful contract; do not create helpers or layers solely to shorten local code.
 - Design, do not accumulate. Make the smallest coherent change, reshape stale logic when its assumptions no longer hold, and remove obsolete branches, comments, debug paths, and compatibility residue that no longer serve the production design.
 
+### Build and test paths
+
+- During builds and tests, do not redirect caches, temporary files, artifacts, outputs, or related state to `/tmp` or another temporary path unless the user explicitly authorizes that redirection.
+- If a required build or test path is unavailable or unwritable, stop and report the blocker instead of substituting a temporary path.
+
 You are developing on shared Tenstorrent Galaxy servers at Moreh. Devices are a shared resource — you must follow the locking protocol exactly.
 
 ## Instruction priority
