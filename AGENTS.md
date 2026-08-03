@@ -87,7 +87,21 @@ When creating a feature branch, use the `sunho/` prefix by default unless the us
 
 ## Worktree use
 
-Use `git worktree` only for static code analysis or documentation work at a specific HEAD. Never create an ad hoc worktree for builds or device-backed tests; perform that work only in the current session checkout. If existing changes prevent a required branch checkout, commit them locally or stash them before checking out the branch.
+Use the repository's primary checkout by default. Use `git worktree` only for
+static code analysis or documentation work at a specific HEAD. Never create an
+ad hoc worktree for builds or device-backed tests; perform that work only in
+the current session checkout.
+
+If the primary checkout is dirty, do not create a worktree to avoid it.
+Preserve the existing changes first: either stash them, including relevant
+untracked files, or commit and push them to an appropriate branch, following
+the repository's Git rules. Never discard or overwrite existing work. If the
+dirty changes are the task's intended input, handle them there rather than
+stashing them away. Restore stashed changes when the task is complete and it is
+safe to do so; report any restoration conflict.
+
+If existing changes prevent a required branch checkout, commit them locally or
+stash them before checking out the branch.
 
 ## Device Locking
 
