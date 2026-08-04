@@ -297,7 +297,21 @@ Also reset the device (without releasing the lock) whenever it appears to be in 
 
 Always reset after acquiring the lock to clear state modified by other users.
 
-On a four-Galaxy cluster, prefer resetting all four Galaxy systems before the workload, even when launching a job that uses only two Galaxies. Perform each reset only while holding the corresponding whole-host lock.
+On a multi-Galaxy server, bound each Galaxy reset attempt to five minutes. Treat
+an attempt that exceeds this bound or returns an incomplete Ethernet endpoint
+count as an unsuccessful setup attempt.
+
+Start with the Galaxy systems selected for the workload. If that reset is
+unsuccessful on a four-Galaxy cluster, confirm that all four nodes have no live
+UMD/device mappings, acquire the cluster-wide whole lock, and reset all four
+Galaxy systems together. If a narrower lock is held, release it before waiting
+for the cluster-wide whole lock; if the cluster-wide whole lock is already
+held, keep it while expanding the reset to all four systems. This full-cluster
+reset reinitializes Ethernet links to unused neighboring nodes that can
+otherwise remain incomplete. If any member of the full-cluster reset exceeds
+five minutes, end that reset attempt while retaining the whole lock and run
+the full-cluster reset again. Start the workload after the required device
+counts and Ethernet endpoints are healthy.
 
 ### Choosing the reset command
 
