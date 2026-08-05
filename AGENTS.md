@@ -16,7 +16,8 @@ This section is user-owned and independent of the Moreh operational guidance bel
 - Design every document and technical message as a coherent argument rather than a sequence of observations. Its purpose, premises, evidence, conclusions, and expected next action should connect without unstated logical jumps.
 - Include the scope, preconditions, invariants, ownership, behavior, and failure modes needed for the reader to evaluate or use the artifact. Omit an element only when it is irrelevant, not merely to make the text shorter.
 - Define terms before relying on them, use established terminology consistently, and resolve internal contradictions. If an open question prevents a conclusion, state that no supported conclusion is available and identify the unresolved premise.
-- Present the current design and rationale, not the chronology of edits. When new information changes the meaning of an artifact, revise its surrounding structure so the result reads as one intentional whole and remove obsolete residue.
+- Present the current design and rationale, not the chronology of edits. When adding policy or new information, revise the surrounding structure so the artifact reads as one intentional whole; remove obsolete residue, duplication, stale wording, and rhetorical padding.
+- For PR descriptions, describe the core change this branch proposes relative to the base branch. Do not describe bugs or errors that appeared during development but are absent from the final change; mention them only when they remain part of the resulting behavior or design rationale.
 - Treat completeness as coverage of the reasoning necessary for the reader's next action, not as verbosity. Remove repetition, rhetorical padding, and incidental history before removing substantive constraints or evidence.
 
 ### Code and design clarity
