@@ -114,6 +114,14 @@ stash them before checking out the branch.
 
 Only use the lock when you are working with https://github.com/moreh-dev/tt-metal and the hostname is supported by `moreh-lock` (for example, the Moreh Galaxy hosts configured in `tools/moreh_lock`).
 
+Before invoking `moreh-lock` or any tt-metal build, test, import, or workload command, activate the virtual environment created by the active checkout's `create_venv.sh`:
+
+```bash
+source "<absolute path to the active tt-metal checkout>/python_env/bin/activate"
+```
+
+If that environment does not exist, create it with `./create_venv.sh` first, then activate it. Always use the environment from the active checkout; it provides repository tools such as `moreh-lock` and prevents the command from resolving tools or dependencies from another checkout.
+
 Exception: `vllm-tt-moreh` test scripts acquire and release the device lock internally. When running those test scripts, do not acquire `moreh-lock` manually outside the script.
 
 ### Lock command to use
@@ -211,6 +219,7 @@ These rules are intentionally stricter than necessary to reduce mistakes by AI a
 
 ### General kernel rules
 
+- When writing or modifying TT data-movement kernels, use the Device 2.0 APIs from `tt_metal/hw/inc/api/` rather than legacy data-movement APIs. Follow the [Device 2.0 Data Movement API Migration Guide](https://github.com/tenstorrent/tt-metal/blob/main/docs/source/tt-metalium/tt_metal/apis/kernel_apis/data_movement/device_api_migration_guide.md). Legacy API names elsewhere in these instructions express required behavior only; use their Device 2.0 equivalents in code.
 - Never use `invalidate_l1_cache()`.
 - Any kernel that issues asynchronous NoC atomics, including semaphore increments, must call `noc_async_atomic_barrier()` after those operations and before the kernel ends.
 - Any kernel that issues asynchronous NoC writes must call `noc_async_write_barrier()` after those operations and before the kernel ends.
