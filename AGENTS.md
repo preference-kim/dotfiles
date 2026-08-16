@@ -100,7 +100,7 @@ This file is the canonical shared guidance for Codex and Claude. The concrete en
 Two modes exist:
 
 - `host-global`: `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md` are symlinks to the corresponding dotfiles files, and shared skills are exposed through per-skill links at `~/.codex/skills/<name>` and `~/.claude/skills/<name>`.
-- `moreh-metal`: the sibling `<dotfiles>/../moreh-metal` checkout's root `AGENTS.md`/`CLAUDE.md` and its `.codex/skills/<name>`/`.claude/skills/<name>` carry the links instead; no host-global entries under `~/.codex` or `~/.claude` are made.
+- `moreh-dev`: the sibling `<dotfiles>/../moreh-metal` checkout's root `AGENTS.md`/`CLAUDE.md` and its `.codex/skills/<name>`/`.claude/skills/<name>` carry the links instead; no host-global entries under `~/.codex` or `~/.claude` are made.
 
 If the current host has no configured mode, `agent-update` must stop and ask rather than guess or apply a default.
 
