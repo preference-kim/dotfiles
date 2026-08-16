@@ -10,11 +10,18 @@
 #                  <dotfiles>/.codex/AGENTS.md and <dotfiles>/.claude/CLAUDE.md;
 #                  shared skills are exposed at ~/.codex/skills/<name> and
 #                  ~/.claude/skills/<name>.
-#   moreh-dev    - the sibling <dotfiles>/../moreh-metal checkout's root
-#                  AGENTS.md/CLAUDE.md and .codex/skills/<name>,
-#                  .claude/skills/<name> carry the links instead; no
-#                  host-global entries are made.
+#   moreh-dev    - the Git checkout configured by moreh_dev_root carries the
+#                  root AGENTS.md/CLAUDE.md and .codex/skills/<name>,
+#                  .claude/skills/<name> links instead; no host-global entries
+#                  are made.
 #
-# If agent-file-sync.local.yaml is absent, this host has no configured mode:
-# agent-update must stop and ask rather than guess or fall back to a default.
+# moreh_dev_root is required in moreh-dev mode. Relative paths are resolved
+# from the dotfiles root; absolute paths are used as written. The target must
+# already exist and be the root of a Git checkout. agent-update never searches
+# for, creates, or clones a target.
+#
+# If agent-file-sync.local.yaml is absent, its mode is invalid, or moreh-dev
+# lacks a valid moreh_dev_root, agent-update must stop and ask rather than
+# guess, search for a checkout, or fall back to a default.
 mode: host-global
+# moreh_dev_root: ../moreh-metal
