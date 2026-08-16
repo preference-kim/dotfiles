@@ -1,5 +1,3 @@
 .secrets
 .DS_Store
-.gitsecret/keys/random_seed
-!*.secret
-agent-file-sync.yaml
+agent-file-sync.local.yaml
