@@ -10,7 +10,7 @@
 #                  <dotfiles>/.codex/AGENTS.md and <dotfiles>/.claude/CLAUDE.md;
 #                  shared skills are exposed at ~/.codex/skills/<name> and
 #                  ~/.claude/skills/<name>.
-#   moreh-metal  - the sibling <dotfiles>/../moreh-metal checkout's root
+#   moreh-dev    - the sibling <dotfiles>/../moreh-metal checkout's root
 #                  AGENTS.md/CLAUDE.md and .codex/skills/<name>,
 #                  .claude/skills/<name> carry the links instead; no
 #                  host-global entries are made.
