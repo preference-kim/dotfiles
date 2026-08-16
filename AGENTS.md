@@ -19,13 +19,23 @@ This section is user-owned and independent of the Moreh operational guidance bel
 - Write every document, status update, and final response from the current supported state. Lead with its purpose and conclusion; include only the evidence, constraints, risks, and next action the reader needs. Omit activity logs, attempt chronology, superseded reasoning, and narration of how the answer was produced unless that history is necessary to reproduce a result or explain current behavior or risk.
 - Treat progress updates as state snapshots, not work diaries. Report only the latest verified state, a material blocker or failure and its impact, and the next action.
 - When adding policy or new information, revise the surrounding structure so the artifact reads as one intentional whole; remove obsolete residue, duplication, stale wording, and rhetorical padding.
-- For PR descriptions, state only the final retained design and final results relative to the base branch. Never narrate how the branch arrived there: omit commit-by-commit evolution, review iterations, rebases, intermediate candidates, failed or superseded experiments, transient regressions, fixes to problems absent from the final change, retries, and rerun chronology. A baseline may appear only as a direct comparison needed to quantify the final result, without an accompanying development story.
 - Treat completeness as coverage of the reasoning necessary for the reader's next action, not as verbosity. Remove repetition, rhetorical padding, and incidental history before removing substantive constraints or evidence.
 
 ### Pre-delivery review
 
 - Before delivering any document, artifact, or final response, review it for relevance, concision, precision, and logical completeness. Remove repetition and vague abstractions, and verify that every material conclusion is supported by evidence or an explicit premise.
 - Do not finalize a claim that you cannot explain. If material understanding is missing, re-examine the task and gather the required evidence. If that evidence is unavailable, state that no supported conclusion is available and identify the unresolved premise and the check needed to resolve it.
+
+### Pull request descriptions
+
+- Start every PR description with `## Korean Summary`. Write the section in Korean using vocabulary and concepts already established in the codebase. State the core problem, retained solution, and concrete result clearly enough to understand without external context; do not introduce unexplained or promotional terminology.
+- Make the PR description self-contained for review. Include the problem, final design, relevant contracts and constraints, reproduction procedure, and evidence needed to assess the change. External references may supplement the body but must not carry information required for the review decision.
+- Never include a local artifact path or use a local-only file, log, plot, report, working-tree state, or other reviewer-inaccessible resource as evidence. Move every material fact from such an artifact into the PR description. Do not require the reviewer to consult chat, comments, external documents, dashboards, or unpublished artifacts to understand or validate a claim.
+- Write text as short bullets grouped by distinct topics. Use direct, specific wording; remove ambiguous, verbose, or repetitive prose.
+- For every reported experiment, provide an exact reproducible command line in a fenced `bash` code block. Include the repository-relative working directory, required environment variables and inputs, and exact test or benchmark selection; do not depend on local aliases, private wrappers, undeclared state, or machine-specific absolute paths.
+- Present concrete results in Markdown tables with the workload, conditions, units, acceptance criterion or comparison basis, and result needed to interpret each value.
+- When detailed logs are necessary, include only the relevant excerpt inside a collapsed `<details><summary>...</summary>...</details>` block with a specific summary label. Omit irrelevant output, secrets, and local paths.
+- State only the final retained design and final results relative to the base branch. Never narrate how the branch arrived there: omit commit-by-commit evolution, review iterations, rebases, intermediate candidates, failed or superseded experiments, transient regressions, fixes to problems absent from the final change, retries, and rerun chronology. A baseline may appear only as a direct comparison needed to quantify the final result, without an accompanying development story.
 
 ### Code and design clarity
 
