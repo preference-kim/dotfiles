@@ -78,11 +78,11 @@ Never silently omit an unexpected error. In the next response to the user, brief
 
 ## Agent file sync
 
-This file is the canonical shared guidance for Codex and Claude. Tool-specific global instruction files must remain symlinks to this file. Shared skills live only in the `skills` submodule and are exposed through per-skill links in each tool's real global skills directory so host-local skills can coexist.
+This file is the canonical shared guidance for Codex and Claude. When the sibling `moreh-metal` checkout exists, its root `AGENTS.md` and `CLAUDE.md` must remain relative symlinks to the corresponding dotfiles files. Shared skills live only in the `skills` submodule and are exposed through per-skill links in `moreh-metal/.codex/skills` and `moreh-metal/.claude/skills`; those directories remain real directories so project-owned skills can coexist. Do not install these entry points in `~/.codex` or `~/.claude`.
 
-At the start of the first user task in each new session, use the `agent-update` skill for its daily refresh. The skill skips work after a successful refresh on the same local calendar day. If it pulls or reconciles changed instructions, re-read the updated AGENTS.md and skill files before continuing.
+At the start of the first user task in each new session, use the `agent-update` skill for its daily refresh. The skill skips network and repository work after a successful refresh on the same local calendar day, but always verifies and repairs the `moreh-metal` instruction and skill links. If it pulls or reconciles changed instructions, re-read the updated AGENTS.md and skill files before continuing.
 
-Use `/agent-update` or `$agent-update` to force a refresh, edit shared agent instructions or skills, repair their global symlinks, or publish agent-file changes. Synchronization must compare the local design with `csehydrogen/.files` semantically; never overwrite intentional local policy with a wholesale upstream copy.
+Use `/agent-update` or `$agent-update` to force a refresh, edit shared agent instructions or skills, repair the `moreh-metal` links, or publish agent-file changes. Synchronization must compare the local design with `csehydrogen/.files` semantically; never overwrite intentional local policy with a wholesale upstream copy.
 
 ## Git workflow
 
