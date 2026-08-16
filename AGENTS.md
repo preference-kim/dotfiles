@@ -136,15 +136,17 @@ stash them before checking out the branch.
 
 ## Device Locking
 
-Only use the lock when you are working with https://github.com/moreh-dev/tt-metal and the hostname is supported by `moreh-lock` (for example, the Moreh Galaxy hosts configured in `tools/moreh_lock`).
+Only use the lock when you are working with https://github.com/moreh-dev/tt-metal and the current host is registered with `moreh-lock`. Run `moreh-lock status` to confirm registration; it reports the node and its current holder.
 
-Before invoking `moreh-lock` or any tt-metal build, test, import, or workload command, activate the virtual environment created by the active checkout's `create_venv.sh`:
+`moreh-lock` is a system installation at `/usr/local/bin/moreh-lock`, independent of any tt-metal checkout. Never vendor, install, or invoke a checkout-local copy. tt-metal removed its bundled `tools/moreh_lock`, so a `moreh-lock` inside a checkout virtual environment is a stale console script that shadows the system binary and fails with `ModuleNotFoundError: No module named 'moreh_lock'`. Delete such a shim rather than working around it. The system wrapper runs Python with `-I`, so a tt-metal `PYTHONPATH` cannot shadow the package once the shim is gone.
+
+Separately, activate the active checkout's virtual environment for tt-metal build, test, import, and workload commands, so they resolve dependencies from that checkout rather than another one:
 
 ```bash
 source "<absolute path to the active tt-metal checkout>/python_env/bin/activate"
 ```
 
-If that environment does not exist, create it with `./create_venv.sh` first, then activate it. Always use the environment from the active checkout; it provides repository tools such as `moreh-lock` and prevents the command from resolving tools or dependencies from another checkout.
+If that environment does not exist, create it with `./create_venv.sh` first, then activate it. `create_venv.sh` defaults to `./python_env`, but a checkout may use a different directory such as `.venv`; activate the one that checkout actually has. Activating a virtual environment never replaces the system `moreh-lock`.
 
 Exception: `vllm-tt-moreh` test scripts acquire and release the device lock internally. When running those test scripts, do not acquire `moreh-lock` manually outside the script.
 
@@ -168,13 +170,7 @@ Prefer the CLI wrapper for device commands:
 moreh-lock run --wait-timeout 3600 --max-hold <seconds> -m "<what you are doing and expected duration>" -- <command> <args>
 ```
 
-For single-tray Galaxy work, use tray-scoped locking and restrict visibility to the same tray:
-
-```bash
-moreh-lock run --tray <1-4> --wait-timeout 3600 --max-hold <seconds> -m "<tray N work and expected duration>" -- bash -lc 'TT_VISIBLE_DEVICES=$(moreh-smi -glx_tray_env <1-4>) <command> <args>'
-```
-
-A command without `--tray` locks the whole host and conflicts with all tray locks. Tray locks for different trays may run concurrently; tray locks for the same tray conflict. See `tools/moreh_lock/README.md` for current tray-scoped locking semantics.
+The lock is node-wide. Reservations are node-exclusive, so two jobs never share a node, and `TT_VISIBLE_DEVICES` selects only which devices the workload uses; it never narrows the lock. To lock several hosts for one job, name every host with `--nodes host1,host2`.
 
 If the command needs shell features, wrap it with `bash -lc`:
 
@@ -194,10 +190,13 @@ After a locked command exits, verify the lock was released:
 moreh-lock status
 ```
 
-Expected final output:
+Expected final output reports the node with no holder:
 
 ```text
-Lock is free (... lock files)
+NODE	<host>
+STATE	FREE
+USER	-
+JOB	-
 ```
 
 Do not run device commands outside `moreh-lock run` unless a higher-level tool already acquires the lock for you. Do not manually kill another user's lock process.
@@ -361,7 +360,6 @@ When working with tt-metal, always use `moreh-smi` for reset commands. Never use
 `tt-smi` to reset devices during tt-metal development.
 
 - For tt-metal work on a Galaxy host (hostname is in `moreh-lock`'s hostname-to-slack-channel map): use `moreh-smi -glx_reset` for a whole-Galaxy reset.
-- For single-tray Galaxy work while holding the matching tray lock, use `moreh-smi -glx_reset_tray <1-4>` and set `TT_VISIBLE_DEVICES=$(moreh-smi -glx_tray_env <1-4>)` for the workload. See `tools/moreh_smi/README.md` for current tray reset behavior and examples.
 - For tt-metal work on a non-Galaxy host (e.g. `ttdev14`): use `moreh-smi -r` with **no** device index. Never pass `-r <index>` on a non-Galaxy host — it can leave the card in a worse state.
 
 When working with a project other than tt-metal (for example, tt-latem), using
