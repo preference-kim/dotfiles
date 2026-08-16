@@ -95,7 +95,7 @@ Never silently omit an unexpected error. Report it in terms of its current impac
 
 ## Agent file sync
 
-This file is the canonical shared guidance for Codex and Claude. The concrete entry-point layout is a per-host choice, not fixed in this document: it is recorded in `agent-file-sync.yaml`, encrypted at the dotfiles root with `git-secret` (`agent-file-sync.yaml.secret`, `.gitsecret/`), keyed by hostname. A host has a configured mode only if it is listed in that file and holds the GPG key needed to `git secret reveal` it; this keeps the choice something the user grants explicitly per host, not something an agent-update run on any host can redefine for every host.
+This file is the canonical shared guidance for Codex and Claude. The concrete entry-point layout is a per-host choice, not fixed in this document: it is recorded in `agent-file-sync.local.yaml` at the dotfiles root, a host-local file that is gitignored and never committed, based on the template in the tracked `agent-file-sync.example.yaml`. Because the file never syncs through git, no agent-update run on any host can read, set, or overwrite another host's mode; each host's choice exists only on that host, made there directly.
 
 Two modes exist:
 
@@ -106,7 +106,7 @@ If the current host has no configured mode, `agent-update` must stop and ask rat
 
 At the start of the first user task in each new session, use the `agent-update` skill for its daily refresh. The skill skips network and repository work after a successful refresh on the same local calendar day, but always verifies and repairs the current host's configured entry points and skill links. If it pulls or reconciles changed instructions, re-read the updated AGENTS.md and skill files before continuing.
 
-Use `/agent-update` or `$agent-update` to force a refresh, edit shared agent instructions or skills, repair the current host's links, publish agent-file changes, or add or change a host's entry in `agent-file-sync.yaml`. Synchronization must compare the local design with `csehydrogen/.files` semantically; never overwrite intentional local policy with a wholesale upstream copy.
+Use `/agent-update` or `$agent-update` to force a refresh, edit shared agent instructions or skills, repair the current host's links, publish agent-file changes, or set this host's mode in `agent-file-sync.local.yaml`. Synchronization must compare the local design with `csehydrogen/.files` semantically; never overwrite intentional local policy with a wholesale upstream copy.
 
 ## Git workflow
 

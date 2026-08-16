@@ -1,0 +1,20 @@
+# Template for agent-file-sync.local.yaml (see AGENTS.md, "Agent file sync").
+#
+# Copy this file to agent-file-sync.local.yaml at the dotfiles root and set
+# this host's mode. agent-file-sync.local.yaml is gitignored and never
+# committed: it is a host-local setting, not something any agent-update run
+# reads or writes on a different host.
+#
+# Modes:
+#   host-global  - ~/.codex/AGENTS.md and ~/.claude/CLAUDE.md are symlinks to
+#                  <dotfiles>/.codex/AGENTS.md and <dotfiles>/.claude/CLAUDE.md;
+#                  shared skills are exposed at ~/.codex/skills/<name> and
+#                  ~/.claude/skills/<name>.
+#   moreh-metal  - the sibling <dotfiles>/../moreh-metal checkout's root
+#                  AGENTS.md/CLAUDE.md and .codex/skills/<name>,
+#                  .claude/skills/<name> carry the links instead; no
+#                  host-global entries are made.
+#
+# If agent-file-sync.local.yaml is absent, this host has no configured mode:
+# agent-update must stop and ask rather than guess or fall back to a default.
+mode: host-global
