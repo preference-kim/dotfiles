@@ -16,9 +16,16 @@ This section is user-owned and independent of the Moreh operational guidance bel
 - Design every document and technical message as a coherent argument rather than a sequence of observations. Its purpose, premises, evidence, conclusions, and expected next action should connect without unstated logical jumps.
 - Include the scope, preconditions, invariants, ownership, behavior, and failure modes needed for the reader to evaluate or use the artifact. Omit an element only when it is irrelevant, not merely to make the text shorter.
 - Define terms before relying on them, use established terminology consistently, and resolve internal contradictions. If an open question prevents a conclusion, state that no supported conclusion is available and identify the unresolved premise.
-- Present the current design and rationale, not the chronology of edits. When adding policy or new information, revise the surrounding structure so the artifact reads as one intentional whole; remove obsolete residue, duplication, stale wording, and rhetorical padding.
+- Write every document, status update, and final response from the current supported state. Lead with its purpose and conclusion; include only the evidence, constraints, risks, and next action the reader needs. Omit activity logs, attempt chronology, superseded reasoning, and narration of how the answer was produced unless that history is necessary to reproduce a result or explain current behavior or risk.
+- Treat progress updates as state snapshots, not work diaries. Report only the latest verified state, a material blocker or failure and its impact, and the next action.
+- When adding policy or new information, revise the surrounding structure so the artifact reads as one intentional whole; remove obsolete residue, duplication, stale wording, and rhetorical padding.
 - For PR descriptions, state only the final retained design and final results relative to the base branch. Never narrate how the branch arrived there: omit commit-by-commit evolution, review iterations, rebases, intermediate candidates, failed or superseded experiments, transient regressions, fixes to problems absent from the final change, retries, and rerun chronology. A baseline may appear only as a direct comparison needed to quantify the final result, without an accompanying development story.
 - Treat completeness as coverage of the reasoning necessary for the reader's next action, not as verbosity. Remove repetition, rhetorical padding, and incidental history before removing substantive constraints or evidence.
+
+### Pre-delivery review
+
+- Before delivering any document, artifact, or final response, review it for relevance, concision, precision, and logical completeness. Remove repetition and vague abstractions, and verify that every material conclusion is supported by evidence or an explicit premise.
+- Do not finalize a claim that you cannot explain. If material understanding is missing, re-examine the task and gather the required evidence. If that evidence is unavailable, state that no supported conclusion is available and identify the unresolved premise and the check needed to resolve it.
 
 ### Code and design clarity
 
@@ -67,7 +74,7 @@ Unless the user explicitly requests remote execution, run builds, tests, benchma
 
 ## Unexpected errors
 
-Never silently omit an unexpected error. In the next response to the user, briefly report what failed, its impact, and whether or how it was recovered.
+Never silently omit an unexpected error. Report it in terms of its current impact, recovery, and residual risk; omit command-by-command retry chronology unless it is needed to reproduce or diagnose the problem.
 
 ## MPI and shared filesystems
 
