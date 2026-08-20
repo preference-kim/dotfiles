@@ -236,6 +236,27 @@ export TT_METAL_RUNTIME_ROOT="${TT_METAL_HOME}"
 export PYTHONPATH="${TT_METAL_HOME}:${TT_METAL_HOME}/ttnn:${TT_METAL_HOME}/tools"
 ```
 
+## Trace capture and replay
+
+TT-Metal trace capture records warmed-up, non-blocking device-program dispatch commands with fixed tensor shapes and
+addresses. It does not capture arbitrary host command-queue (CQ) work. Beginning capture puts every physical device's
+system-memory manager into bypass mode, so this restriction applies to all host CQs on the mesh, not only the CQ whose
+trace ID is active.
+
+- Between `begin_trace_capture` and `end_trace_capture`, enqueue only the device operations intended for the trace.
+  Compile and warm them up before capture, and keep their device buffers at the addresses the replay will use.
+- Do not perform H2D or D2H transfers, buffer/core reads or writes, `.cpu()`/`to_torch()` conversion, device or CQ
+  synchronization/finish, event record/wait, profiler drains, tensor dumps, or any helper that performs equivalent host-CQ
+  work inside capture. Do not hide such work in an op wrapper or callback expected to run as part of trace replay.
+- Replay with `execute_trace(..., blocking=False)`. The trace lifecycle calls themselves necessarily enqueue trace-control
+  work; surrounding input writes, output reads, events, and synchronization must be separate CQ commands outside the
+  captured/replayed command stream. They may be ordered before or after the replay on the same CQ, or coordinated across
+  CQs with events outside capture.
+- To inspect an intermediate while debugging, preallocate a persistent device debug tensor before capture and use a
+  warmed-up, traceable device operation to write it. Read the tensor back only after `end_trace_capture`, or enqueue the
+  read after `execute_trace` as a following CQ command, then synchronize outside the trace. Never add a host readback or
+  synchronization call to the traced model body.
+
 ## Heehoon's tt-metal Kernel Guide
 
 These rules are intentionally stricter than necessary to reduce mistakes by AI agents.
