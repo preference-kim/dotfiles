@@ -252,10 +252,15 @@ trace ID is active.
   work; surrounding input writes, output reads, events, and synchronization must be separate CQ commands outside the
   captured/replayed command stream. They may be ordered before or after the replay on the same CQ, or coordinated across
   CQs with events outside capture.
-- To inspect an intermediate while debugging, preallocate a persistent device debug tensor before capture and use a
-  warmed-up, traceable device operation to write it. Read the tensor back only after `end_trace_capture`, or enqueue the
-  read after `execute_trace` as a following CQ command, then synchronize outside the trace. Never add a host readback or
-  synchronization call to the traced model body.
+- When debugging a model built on `models/common_moreh`, use the shared
+  `models/common_moreh/tensor_dump.py` infrastructure instead of adding an ad hoc dump path. Publish a stable semantic
+  point with `capture_tensor(...)` and use the existing `TensorDumpMixin`/generator integration. It captures a
+  `ttnn.clone` into a persistent device buffer, retains that handle with the trace, and performs host conversion and
+  persistence only after replay. Do not add direct `to_torch`, `.cpu()`, synchronization, or file I/O to model code.
+- For a path that cannot use this infrastructure, preserve the same ownership boundary: preallocate a persistent device
+  debug tensor before capture and use a warmed-up, traceable device operation to write it. Read it back only after
+  `end_trace_capture`, or enqueue the read after `execute_trace` as a following CQ command, then synchronize outside the
+  trace. Complete the host snapshot before another replay can overwrite the retained buffer.
 
 ## Heehoon's tt-metal Kernel Guide
 
