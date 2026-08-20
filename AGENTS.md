@@ -236,7 +236,9 @@ export TT_METAL_RUNTIME_ROOT="${TT_METAL_HOME}"
 export PYTHONPATH="${TT_METAL_HOME}:${TT_METAL_HOME}/ttnn:${TT_METAL_HOME}/tools"
 ```
 
-## Trace capture and replay
+## TTNN trace capture, replay, and performance measurement
+
+### Trace capture and replay contract
 
 TT-Metal trace capture records warmed-up, non-blocking device-program dispatch commands with fixed tensor shapes and
 addresses. It does not capture arbitrary host command-queue (CQ) work. Beginning capture puts every physical device's
@@ -261,6 +263,55 @@ trace ID is active.
   debug tensor before capture and use a warmed-up, traceable device operation to write it. Read it back only after
   `end_trace_capture`, or enqueue the read after `execute_trace` as a following CQ command, then synchronize outside the
   trace. Complete the host snapshot before another replay can overwrite the retained buffer.
+
+### Authoritative steady-state latency for an individual op
+
+For an individual TTNN op repeatedly executed with fixed shapes and buffer addresses, use amortized trace-replay wall
+time as the authoritative steady-state latency. This result represents warmed-up execution with dispatch overhead
+amortized, as in model trace execution. It is not cold-start latency or the end-to-end latency of an ordinary Python API
+call.
+
+Measure it in a fresh process as follows:
+
+1. Leave `TT_METAL_DEVICE_PROFILER` unset or set it to `0`, then execute the op at least once to complete JIT compilation
+   and program-cache preparation.
+2. Begin trace capture and enqueue the same op `N` times, where `N > 10`, using the shapes and device-buffer addresses that
+   replay will retain.
+3. End capture, then synchronize the device before timing.
+4. Record the start time.
+5. Replay the captured trace `M` times with `blocking=False`, where `M > 10`. Do not synchronize between replays.
+6. After the final replay, synchronize the device once and record the end time.
+7. Compute `time_per_op = elapsed_time / (N * M)`.
+
+Device-profiler instrumentation changes execution, especially CCL performance, so profiler-enabled wall time is not an
+authoritative latency result. A host wall-clock measurement without trace replay includes variable dispatch, Python,
+filesystem, and other host overhead; do not interpret it as device-op performance.
+
+Report `N`, `M`, profiler state, replay blocking setting, every synchronization position, input and output shapes, memory
+configurations, and device topology with each result. Also record any program configuration or buffer-layout condition
+needed to reproduce the measurement.
+
+### Tracy attribution
+
+Use Tracy only when per-op or per-kernel attribution is required. Run it in a separate fresh process with
+`TT_METAL_DEVICE_PROFILER=1`; do not reuse that process's wall time as the trace-replay latency result. Keep inputs,
+shapes, program configurations, caller-owned buffers, warmup, and replay structure matched between the latency and
+attribution processes. Runtime profiler options are process-global and read at startup, so changing the environment after
+TT-Metal initialization does not establish a clean comparison.
+
+Run `python -m tracy -r -p -v main.py`; Tracy prints the generated CSV path on completion. Relevant CSV columns are index
+0 = OP CODE, 1 = OP TYPE, 2 = GLOBAL CALL COUNT, 3 = DEVICE ID, and 18 = DEVICE KERNEL DURATION [ns]. When analyzing,
+filter to rows whose DEVICE ID is `0` or empty and extract those five columns. Write a parsing script as needed rather than
+using a fixed one.
+
+Tracy device-kernel duration can be smaller than actual op execution time because it excludes firmware time. Device
+firmware duration can instead overestimate execution when it spans inter-core start or completion skew. Use both only for
+attribution and diagnosis, never as authoritative op latency.
+
+A device-profiler process must use one mesh-device lifetime. Open the mesh device before profiled work and close it only
+after every profiled case and profiler drain in that process completes. Never close and reopen a mesh device in the same
+profiler-enabled process. If cases require independent mesh-device fixtures or device configurations, expose them as
+separately invocable test nodes and run each node in a fresh Tracy process.
 
 ## Heehoon's tt-metal Kernel Guide
 
@@ -308,7 +359,7 @@ TODO: document virtual coordinates, physical coordinates, and the `noc0`/`noc1` 
 When adding an op, implement these tests by default:
 
 - `op_correctness`
-- `op_performance`: use trace-replay-based measurement, not Tracy.
+- `op_performance`: follow the authoritative steady-state trace-replay measurement contract above.
 
 The `op_breakdown` test and its L1 debug tensor interface are optional; implement them only when explicitly instructed. When requested, include an interleaved L1 debug tensor shaped like `[num_cores, num_slots]`; write values as `debug_l1[slot] = x`. Keep this simple; do not use a fancy `TensorAccessor` here.
 
@@ -391,39 +442,6 @@ When working with tt-metal, always use `moreh-smi` for reset commands. Never use
 When working with a project other than tt-metal (for example, tt-latem), using
 `tt-smi` to reset devices is allowed unless repo-local instructions say
 otherwise.
-
-## Profiling with Tracy
-
-Run: `python -m tracy -r -p -v main.py`. Tracy prints the path to a generated CSV on completion.
-
-The CSV has these relevant columns: index 0 = OP CODE, 1 = OP TYPE, 2 = GLOBAL CALL COUNT, 3 = DEVICE ID, 18 = DEVICE KERNEL DURATION [ns]. When analyzing, filter to rows where DEVICE ID is `0` or empty, and extract those five columns. Write a parsing script as needed rather than using a fixed one.
-
-### Separate latency and attribution runs
-
-Do not collect trace-replay wall-clock latency and Tracy device-kernel attribution from the same process:
-
-- For authoritative trace-replay or other host-amortized latency, run a fresh process with `TT_METAL_DEVICE_PROFILER` unset or set to `0`. Device profiling adds instrumentation, SRAM use, and reporting overhead, so profiler-enabled wall time is not an uninstrumented latency result.
-- For per-op or per-kernel attribution, run a separate fresh Tracy process with `TT_METAL_DEVICE_PROFILER=1` and use the reported device durations. Do not reuse that process's wall time as the trace-replay result.
-- Keep inputs, shapes, program configurations, caller-owned buffers, warmup, and replay structure matched between the two runs, and record the profiler state with each artifact. Runtime profiler options are process-global and read at startup, so toggling the environment after TT-Metal initialization does not establish a clean comparison.
-
-### Mesh-device lifetime in device-profile perf tests
-
-A perf-test process with device profiling enabled must use a single mesh-device lifetime. Open the mesh device before the profiled work and close it only after all profiled cases and profiler drains in that process have completed. Never close and reopen a mesh device within the same profiler-enabled process.
-
-If cases require independent mesh-device fixtures or device configurations, expose them as separately invocable test nodes and run each node in a fresh profiler process. Do not combine them in one Tracy invocation when function-scoped fixture teardown would close and reopen the mesh device between cases.
-
-## Benchmarking individual ttnn ops
-
-For measuring a single ttnn op's kernel time, prefer the **trace capture/execute** pattern over Tracy. Trace replay amortizes Python and dispatch overhead across many iterations, so wall-clock time over iterations closely approximates pure device kernel time.
-
-Steps:
-
-1. Run the op once to trigger JIT compilation.
-2. Open `ttnn.begin_trace_capture` and run the op a few times inside to capture the trace.
-3. Record start timestamp, execute the trace N times, synchronize, record end timestamp.
-4. Divide elapsed time by total op executions → good approximation of kernel duration with minimal host overhead.
-
-Reserve Tracy for cases where you need per-op breakdowns inside a larger workload.
 
 ## EvalScope metrics
 
