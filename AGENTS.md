@@ -116,6 +116,8 @@ Exception: for agent-instruction updates in the personal dotfiles and shared ski
 
 When creating a feature branch, use the `sunho/` prefix by default unless the user explicitly requests a different branch name.
 
+When addressing feedback on a pull request you own, never resolve a review thread whose root comment was authored by another person. You may resolve a thread only when its root comment was authored by Copilot or another automated agent, and only after its concern has been addressed and pushed. Human-authored threads must remain open for a person to resolve, even when you implement the requested change.
+
 ## Worktree use
 
 Use the repository's primary checkout by default. Use `git worktree` only for
