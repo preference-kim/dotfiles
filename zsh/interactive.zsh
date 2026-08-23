@@ -60,9 +60,8 @@ add-zsh-hook precmd _dotfiles_set_cursor_style
 alias clear='command clear && _dotfiles_set_cursor_style'
 
 codex() {
-  # Codex's alternate screen does not leave the previous conversation in terminal scrollback,
-  # so default invocations stay inline unless the command behavior changes upstream.
-  command codex --no-alt-screen "$@"
+  # Use Codex's transcript pager; iTerm maps the wheel to pager keys in alternate-screen mode.
+  command codex "$@"
 }
 
 _dotfiles_zsh_source="${${(%):-%x}:A}"
