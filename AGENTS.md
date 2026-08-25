@@ -78,6 +78,15 @@ export CLAUDE_CODE_OAUTH_TOKEN="$(<"$HOME/.claude/oauth-token")"
 
 Never print or commit the token.
 
+## Independent plan review
+
+Use the shared `plan-review` skill when the user asks to review, critique, validate, or stress-test an existing plan. Do not invoke it merely because a request creates or discusses a plan.
+
+- Review only a user-identified plan file or plan content that is uniquely identifiable in the conversation. Never scan tool-specific plan directories, select a recent file, or guess among candidates.
+- Use the opposite agent family at its current highest configured model with `xhigh` effort. Read the concrete agent and model mapping from the skill's reviewer adapter rather than duplicating model aliases in this file.
+- Treat review as read-only. Produce a replacement plan only when requested, and update a named plan artifact only with explicit write authorization.
+- If the required opposite-family reviewer, model, authentication, or read-only execution boundary is unavailable, report that independent review is blocked. Do not present same-family review or self-review as independent.
+
 ## Execution location
 
 Unless the user explicitly requests remote execution, run builds, tests, benchmarks, experiments, and other jobs on the host and cluster where the session is already running. Do not use SSH or another remote connection to move a job elsewhere. For example, from `ttdev31`, run the job on `ttdev31`, not `ttdev32`; from AI cluster 1, stay on AI cluster 1 rather than using AI cluster 2.
