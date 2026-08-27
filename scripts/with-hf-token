@@ -8,6 +8,11 @@ REPO_ROOT=$(git -C "$SCRIPT_DIR/.." rev-parse --show-toplevel)
 ENCRYPTED_FILE="$REPO_ROOT/.hf-token.age"
 RECIPIENTS_FILE="$REPO_ROOT/.hf-token.recipients"
 
+if [[ -d "$HOME/.local/bin" ]]; then
+    PATH="$HOME/.local/bin:$PATH"
+    export PATH
+fi
+
 if [[ $# -eq 0 ]]; then
     echo "Usage: $0 <command> [args ...]" >&2
     exit 2
