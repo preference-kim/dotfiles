@@ -1,3 +1,4 @@
 .secrets
+.hf-token
 .DS_Store
 agent-file-sync.local.yaml

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+set +x
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT=$(git -C "$SCRIPT_DIR/.." rev-parse --show-toplevel)
+ENCRYPTED_FILE="$REPO_ROOT/.hf-token.age"
+RECIPIENTS_FILE="$REPO_ROOT/.hf-token.recipients"
+
+if [[ $# -eq 0 ]]; then
+    echo "Usage: $0 <command> [args ...]" >&2
+    exit 2
+fi
+
+if ! command -v age >/dev/null 2>&1; then
+    echo "Error: age is required to decrypt the Hugging Face token." >&2
+    exit 1
+fi
+if [[ ! -r "$ENCRYPTED_FILE" || ! -r "$RECIPIENTS_FILE" ]]; then
+    echo "Error: the tracked Hugging Face ciphertext or recipients file is missing." >&2
+    exit 1
+fi
+
+identity=${HF_TOKEN_SSH_IDENTITY:-}
+if [[ -n "$identity" ]]; then
+    if [[ ! -r "$identity" || -d "$identity" ]]; then
+        echo "Error: HF_TOKEN_SSH_IDENTITY is not a readable private-key file." >&2
+        exit 1
+    fi
+else
+    shopt -s nullglob
+    for public_key_file in "$HOME"/.ssh/*.pub; do
+        private_key_file=${public_key_file%.pub}
+        [[ -r "$private_key_file" && ! -d "$private_key_file" ]] || continue
+        read -r key_type key_body _ < "$public_key_file" || continue
+        case "$key_type" in
+            ssh-ed25519|ssh-rsa) ;;
+            *) continue ;;
+        esac
+        if awk -v key_type="$key_type" -v key_body="$key_body" \
+            '$1 == key_type && $2 == key_body { found = 1 } END { exit !found }' \
+            "$RECIPIENTS_FILE"; then
+            identity=$private_key_file
+            break
+        fi
+    done
+fi
+
+if [[ -z "$identity" ]]; then
+    echo "Error: no on-disk SSH private key matches .hf-token.recipients." >&2
+    echo "Set HF_TOKEN_SSH_IDENTITY when the matching private key has no .pub companion." >&2
+    exit 1
+fi
+
+hf_token=$(age --decrypt --identity "$identity" "$ENCRYPTED_FILE")
+if [[ ! "$hf_token" =~ ^hf_[A-Za-z0-9]+$ ]]; then
+    unset hf_token
+    echo "Error: decrypted data is not a Hugging Face user access token." >&2
+    exit 1
+fi
+
+export HF_TOKEN="$hf_token"
+unset hf_token
+exec "$@"
