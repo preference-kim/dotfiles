@@ -70,13 +70,14 @@ When compatible with the applicable platform and tool instructions, prefer comma
 
 ### Hugging Face authentication
 
-Treat a successful `hf auth whoami` as the authentication check for Hugging Face Hub operations. If it fails because no usable credential is configured, use the `age`-encrypted token from the canonical dotfiles repository instead of starting an interactive or browser login:
+Treat a successful bare `hf auth whoami` as the authentication check for Hugging Face Hub operations. If it fails because no usable credential is configured, install the `age`-encrypted token from the canonical dotfiles repository into that host's standard Hugging Face credential store instead of starting an interactive or browser login:
 
 - Resolve the dotfiles root from the canonical `AGENTS.md`; do not assume a host-specific clone path. Require `age`, the tracked `.hf-token.age` ciphertext, and an on-disk RSA or Ed25519 SSH private key whose public key is listed in `.hf-token.recipients`. A GitHub registration or forwarded `ssh-agent` without the private-key file is insufficient.
-- Run `<dotfiles>/scripts/with-hf-token hf auth whoami` to verify the fallback. The wrapper decrypts the token in memory, exports `HF_TOKEN` only to the child process, and never writes plaintext. Set `HF_TOKEN_SSH_IDENTITY` to the matching private-key path only when companion `.pub` auto-discovery cannot select it.
+- Run `<dotfiles>/scripts/install-hf-credential`, then rerun bare `hf auth whoami`. The installer decrypts the token in memory, passes it through `HF_TOKEN` rather than a command argument, and writes it only through the installed Hugging Face client to that host's standard credential store with mode `0600`. Set `HF_TOKEN_SSH_IDENTITY` to the matching private-key path only when companion `.pub` auto-discovery cannot select it.
+- Use `<dotfiles>/scripts/with-hf-token <command> [args ...]` only when a process-scoped credential is explicitly preferable to persistent local login. It decrypts the token in memory, exports `HF_TOKEN` only to the child process, and does not update the credential store.
 - If `age`, a matching private key, decryption, or the authenticated check is unavailable, report that exact prerequisite and stop. Do not start another login flow, mint a replacement token, or write a plaintext token without explicit authorization.
 
-Never print or commit the token, pass it in a command argument, or write a plaintext copy during fallback. GitHub key removal does not revoke access to an existing ciphertext; after a recipient-key compromise, rotate the Hugging Face token and re-encrypt it to the retained recipients.
+Never print or commit the token, pass it in a command argument, or write a plaintext copy outside the standard Hugging Face credential store during fallback. GitHub key removal does not revoke access to an existing ciphertext; after a recipient-key compromise, rotate the Hugging Face token and re-encrypt it to the retained recipients.
 
 ### Claude authentication
 
