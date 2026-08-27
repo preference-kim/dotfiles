@@ -11,20 +11,27 @@ on-disk RSA or Ed25519 SSH private key whose companion public key is listed in
 `.hf-token.recipients`. A key registered with GitHub but absent from the machine,
 a forwarded `ssh-agent`, and a hardware-held key cannot decrypt this ciphertext.
 
-Run a Hugging Face command through the wrapper:
+Install the decrypted token into the host's standard Hugging Face credential
+store, then verify a bare CLI invocation:
 
 ```bash
-./scripts/with-hf-token hf auth whoami
+./scripts/install-hf-credential
+hf auth whoami
 ```
 
-The wrapper selects a matching `~/.ssh/*.pub` and private-key pair, decrypts the
-token in memory, and exports `HF_TOKEN` only to the child command. If the public
-companion file is absent, identify the private-key file explicitly:
+The installer selects a matching `~/.ssh/*.pub` and private-key pair, decrypts
+the token in memory, and passes it to the installed Hugging Face client through
+`HF_TOKEN`, never a command argument. The client writes its standard local token
+files, and the installer enforces mode `0600`. If the public companion file is
+absent, identify the private-key file explicitly:
 
 ```bash
 HF_TOKEN_SSH_IDENTITY="$HOME/.ssh/id_ed25519" \
-  ./scripts/with-hf-token hf auth whoami
+  ./scripts/install-hf-credential
 ```
+
+For a process-scoped credential that does not update the local credential
+store, run `./scripts/with-hf-token <command> [args ...]` instead.
 
 ## Add or remove a machine
 
@@ -44,4 +51,4 @@ key may be compromised, rotate the Hugging Face token and regenerate the
 ciphertext for the retained recipients.
 
 Never print, log, commit, or pass the plaintext token as a command-line
-argument.
+argument. Do not write it outside the standard Hugging Face credential store.
