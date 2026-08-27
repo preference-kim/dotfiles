@@ -70,13 +70,13 @@ When compatible with the applicable platform and tool instructions, prefer comma
 
 ### Hugging Face authentication
 
-Treat a successful `hf auth whoami` as the authentication check for Hugging Face Hub operations. If it fails because no usable credential is configured, use the `git-secret`-managed token from the canonical dotfiles repository instead of starting an interactive or browser login:
+Treat a successful `hf auth whoami` as the authentication check for Hugging Face Hub operations. If it fails because no usable credential is configured, use the `age`-encrypted token from the canonical dotfiles repository instead of starting an interactive or browser login:
 
-- Resolve the dotfiles root from the canonical `AGENTS.md`; do not assume a host-specific clone path. Require `git-secret`, the registered `.hf-token` secret, and a matching GPG private key.
-- If `.hf-token` is not already readable, run `(umask 077; git secret reveal .hf-token)` from the dotfiles root, then set and verify mode `0600`. Read the token into `HF_TOKEN` without printing or logging it, scope it to the Hugging Face process or current task, and rerun `hf auth whoami`.
-- If decryption or the authenticated check fails, report the missing prerequisite and stop. Do not start another login flow, mint a replacement token, or overwrite an existing plaintext token without explicit authorization.
+- Resolve the dotfiles root from the canonical `AGENTS.md`; do not assume a host-specific clone path. Require `age`, the tracked `.hf-token.age` ciphertext, and an on-disk RSA or Ed25519 SSH private key whose public key is listed in `.hf-token.recipients`. A GitHub registration or forwarded `ssh-agent` without the private-key file is insufficient.
+- Run `<dotfiles>/scripts/with-hf-token hf auth whoami` to verify the fallback. The wrapper decrypts the token in memory, exports `HF_TOKEN` only to the child process, and never writes plaintext. Set `HF_TOKEN_SSH_IDENTITY` to the matching private-key path only when companion `.pub` auto-discovery cannot select it.
+- If `age`, a matching private key, decryption, or the authenticated check is unavailable, report that exact prerequisite and stop. Do not start another login flow, mint a replacement token, or write a plaintext token without explicit authorization.
 
-Never print or commit the token, pass it in a command argument, or write a plaintext copy outside the managed `.hf-token` file.
+Never print or commit the token, pass it in a command argument, or write a plaintext copy during fallback. GitHub key removal does not revoke access to an existing ciphertext; after a recipient-key compromise, rotate the Hugging Face token and re-encrypt it to the retained recipients.
 
 ### Claude authentication
 
