@@ -68,6 +68,16 @@ Never use Korean unless the user explicitly requests it.
 
 When compatible with the applicable platform and tool instructions, prefer command-line tools, direct APIs, or another programmatic approach over installing or requesting a plugin for services such as Slack or GitHub. Use a plugin when the platform requires it or the direct approaches are unavailable or clearly inadequate.
 
+### Hugging Face authentication
+
+Treat a successful `hf auth whoami` as the authentication check for Hugging Face Hub operations. If it fails because no usable credential is configured, use the `git-secret`-managed token from the canonical dotfiles repository instead of starting an interactive or browser login:
+
+- Resolve the dotfiles root from the canonical `AGENTS.md`; do not assume a host-specific clone path. Require `git-secret`, the registered `.hf-token` secret, and a matching GPG private key.
+- If `.hf-token` is not already readable, run `(umask 077; git secret reveal .hf-token)` from the dotfiles root, then set and verify mode `0600`. Read the token into `HF_TOKEN` without printing or logging it, scope it to the Hugging Face process or current task, and rerun `hf auth whoami`.
+- If decryption or the authenticated check fails, report the missing prerequisite and stop. Do not start another login flow, mint a replacement token, or overwrite an existing plaintext token without explicit authorization.
+
+Never print or commit the token, pass it in a command argument, or write a plaintext copy outside the managed `.hf-token` file.
+
 ### Claude authentication
 
 For local Claude subprocesses and reviewer workflows, use the subscription credentials managed by `claude auth login` or `/login`. Do not read or maintain `$HOME/.claude/oauth-token` as a local credential source, and do not export a static `CLAUDE_CODE_OAUTH_TOKEN` from a file.
