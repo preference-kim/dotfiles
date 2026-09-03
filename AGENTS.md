@@ -90,14 +90,22 @@ For local Claude subprocesses and reviewer workflows, use the subscription crede
 
 Never print or commit any credential.
 
+### Claude model selection
+
+For local Claude subprocesses that perform planning, technical review, or other reasoning-intensive work, explicitly request the current highest configured model and highest supported effort. The current default is `--model fable --effort xhigh`; use a lower-cost model only when the user or the task explicitly prioritizes cost or latency over review quality.
+
+- In non-interactive `--print` workflows, add `--fallback-model opus,sonnet`. This ordered fallback is authorized only when Claude Code reports the primary model unavailable because of model quota, capacity, or availability. It does not authorize changing authentication providers, consuming a different API key, purchasing credits, or bypassing an account-wide usage limit. If every candidate is unavailable, stop and report the blocker.
+- When the result depends on reviewer tier, request JSON output, use the top-level `result` as the reviewer response, and inspect `modelUsage` to determine which configured candidate produced it. Ignore auxiliary model entries outside the configured candidate chain. Disclose any fallback and do not describe a fallback result as a highest-model review.
+- Keep model aliases in the concrete reviewer adapters and invocations so they can be updated in one intentional policy change when Claude Code's model mapping changes; do not pin a dated model ID merely to preserve an obsolete version.
+
 ## Independent plan review
 
 Use the shared `plan-review` skill when the user asks to review, critique, validate, or stress-test an existing plan. Do not invoke it merely because a request creates or discusses a plan.
 
 - Review only a user-identified plan file or plan content that is uniquely identifiable in the conversation. Never scan tool-specific plan directories, select a recent file, or guess among candidates.
-- Use the opposite agent family at its current highest configured model with `xhigh` effort. Read the concrete agent and model mapping from the skill's reviewer adapter rather than duplicating model aliases in this file.
+- Use the opposite agent family with `xhigh` effort. Request its current highest configured model first and use only the ordered, resource-driven fallback chain defined by the skill's reviewer adapter.
 - Treat review as read-only. Produce a replacement plan only when requested, and update a named plan artifact only with explicit write authorization.
-- If the required opposite-family reviewer, model, authentication, or read-only execution boundary is unavailable, report that independent review is blocked. Do not present same-family review or self-review as independent.
+- A configured lower-model fallback remains an independent opposite-family review, but disclose the actual model and do not call it a highest-model review. If the reviewer family, every configured model, authentication, or read-only execution boundary is unavailable, report that independent review is blocked. Do not present same-family review or self-review as independent.
 
 ## Execution location
 
