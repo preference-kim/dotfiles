@@ -48,6 +48,13 @@ This section is user-owned and independent of the Moreh operational guidance bel
 - During builds and tests, do not redirect caches, temporary files, artifacts, outputs, or related state to `/tmp` or another temporary path unless the user explicitly authorizes that redirection.
 - If a required build or test path remains unavailable or unwritable after applying the shared-default-asset policy below, stop and report the blocker instead of substituting a temporary path.
 
+### Workspace cleanup
+
+- Treat review outputs, temporary directories, diagnostic scratch, and other agent-created transient artifacts as ephemeral. Remove them when their task is complete, and inspect for abandoned instances during every `agent-update` run.
+- Before deleting anything, resolve each exact target and verify that it is not a Git repository or worktree, an active process's working directory or input, a credential or configuration directory, a shared default asset, or evidence still needed to reproduce a current conclusion. Never use a broad home-directory glob or delete data whose ownership or purpose is ambiguous.
+- Treat experiment outputs and datasets as disposable once the session no longer needs them. Ask the user whether completed experiment data should be retained, state that deletion is the default, and delete it unless the user requests retention. If the user does not answer or the completed scope is unclear, preserve the data and report the unresolved cleanup item.
+- After cleanup, report what was removed, the reclaimed space, and whether recovery remains possible.
+
 ### Shared default assets
 
 - On shared servers, use the project's configured default paths for datasets, model weights, and other shared assets when those paths exist.
