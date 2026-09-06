@@ -21,6 +21,7 @@ the relationship between claims and evidence, not a diagnosis of anyone's motive
 
 ### Communication and delivery
 
+- Keep all feedback, documentation, and answers concise, especially PR review comments. For technical problems, identify the problem precisely, explain the fundamental design or contract established conventions call for with relevant code, standards, or authoritative references, and end with a brief summary of concrete suggestions. Distinguish conventions from preferences; omit repetition and generic background.
 - Present every document and technical message as a coherent argument: connect its purpose, premises, evidence, conclusions, and expected next action without unstated logical jumps. Define terms before relying on them, use established terminology consistently, and resolve internal contradictions.
 - Include the scope, preconditions, invariants, ownership, behavior, and failure modes needed for the reader to evaluate or use the artifact. Omit an element only when it is irrelevant. Completeness means covering what the reader needs for the next action; remove repetition, vague abstractions, and incidental history before removing substantive constraints or evidence.
 - Lead with the current supported conclusion and the document's purpose. Include the evidence, constraints, risks, and next action the reader needs. Omit activity logs, superseded reasoning, and attempt chronology unless that history is necessary to reproduce a result or explain current behavior or risk.
@@ -31,7 +32,7 @@ the relationship between claims and evidence, not a diagnosis of anyone's motive
 ### Pull request communication
 
 - Before creating or revising a PR description, load `write-technical-pr`; its policy preserves the Korean Summary, self-contained evidence, reproduction, and final-state requirements.
-- In every PR review, identify the precise problem, triggering conditions, and impact. Explain the fundamental design principle or contract the solution should satisfy, with relevant code, standards, or authoritative references. Distinguish established conventions from preferences. End with concise concrete suggestions; omit repetition and generic background.
+- Apply the communication structure above to each PR review comment, including the triggering conditions and impact. Keep the explanation and suggestions specific to the finding.
 - Before delivering or posting PR feedback or a PR description, load `stop-bullshit` and apply its final check after prose editing. Check the reviewed material and the review comments themselves. Copy the check into isolated reviewer prompts; preserve each workflow's write and delegation boundaries.
 
 ### Code and design clarity
