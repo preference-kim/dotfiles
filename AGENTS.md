@@ -59,14 +59,13 @@ the relationship between claims and evidence, not a diagnosis of anyone's motive
 - If an asset exists at its default path but access fails only because its ownership, mode bits, or ACLs restrict it to a particular user, verify the exact shared target and fix its ownership or permissions before continuing. The team must be able to read and write the asset and to traverse directories or execute files where required. Keep the change scoped to the intended shared asset; do not bypass it with a user-private copy or an alternate path.
 - If the configured default path or required asset is absent, treat that as an unintended code, configuration, deployment, or provisioning condition. Stop and determine whether the default path or asset provisioning must be fixed instead of silently creating or selecting a substitute path.
 
-## Moreh development
+## TT-Metal development
 
-You are developing on shared Tenstorrent Galaxy servers at Moreh. Devices are a
-shared resource: follow the locking and recovery contracts before touching them.
-Use the active checkout's environment and `./build_metal.sh -ce` after source
-changes. Kernel correctness and trace-replay measurement have explicit contracts
-in the required-context table below. These maintained guides are part of this
-AGENTS.md, and must remain available even without a domain skill installed.
+The maintained [TT-Metal guidance](agent-guidance/tt-metal/README.md) is part of
+this AGENTS.md and must remain available without a domain skill installed. It
+covers the active checkout's environment, builds, shared device locking, resets,
+and MPI/shared-cache setup. The required-context table below routes basic work
+there and specialized work to the deeper references in `agent-guidance/tt-metal/`.
 
 ## Instruction priority
 
@@ -111,11 +110,10 @@ every linked document.
 | Git mutation, branch/worktree changes, or handling PR review threads | `agent-guidance/version-control.md` |
 | Hugging Face authentication or Hub operations | `agent-guidance/hugging-face-auth.md` |
 | Starting a Claude subprocess or checking its authentication | `agent-guidance/claude-auth.md`; for reasoning/review also `agent-guidance/claude-model.md` |
-| TT-Metal build, import, test, or workload | `agent-guidance/tt-metal/build.md` |
-| Touching a TT device, including tests and profiling | `agent-guidance/tt-metal/device-locking.md` and `agent-guidance/tt-metal/recovery.md`; also the build guide |
-| Editing or reviewing TT-Metal kernels or ops | `agent-guidance/tt-metal/kernels.md`; read the build guide before execution |
-| TTNN trace capture/replay or performance measurement and interpretation | `agent-guidance/tt-metal/profiling.md`; also build/locking/recovery before execution |
-| MPI launches or shared writable caches | `agent-guidance/tt-metal/distributed.md` |
+| TT-Metal build, import, test, or workload; touching a TT device; MPI launches or shared writable caches | `agent-guidance/tt-metal/README.md` |
+| Diagnosing TT device hangs, initialization failures, or unsuccessful resets | `agent-guidance/tt-metal/debugging.md`; also the basic guide before device work |
+| Editing or reviewing TT-Metal kernels or ops | `agent-guidance/tt-metal/kernels.md`; read the basic guide before execution |
+| TTNN trace capture/replay or performance measurement and interpretation | `agent-guidance/tt-metal/profiling.md`; also the basic guide before execution |
 | Interpreting EvalScope speculative acceptance | `agent-guidance/tt-metal/evalscope.md` |
 
 Never push directly to a project's main branch, resolve human-authored review
