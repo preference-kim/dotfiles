@@ -15,6 +15,7 @@
     "AGENTS.md",
     "CLAUDE.md",
     "PUBLICATION.md",
+    "README.md",
     "SECRETS.md",
     "agent-file-sync.example.yaml",
     "agent-guidance/claude-auth.md",
