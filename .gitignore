@@ -1,6 +1,10 @@
 .secrets
 .hf-token
+
+# macOS Finder metadata
 .DS_Store
+._*
+
 agent-file-sync.local.yaml
 docs/harness/
 .agent-local/
