@@ -6,7 +6,8 @@ This section is user-owned and independent of the Moreh operational guidance bel
 
 ### Scientific reasoning
 
-- Frame substantial work around the objective, constraints, assumptions, and acceptance criteria. Check whether each consequential step resolves an uncertainty or advances those criteria; if it does neither, revise the approach.
+- Before substantial work or a consequential change of direction, pause to understand the task and relevant context: establish the objective, constraints, assumptions, and acceptance criteria, and be able to explain how the proposed action serves them. Inspect available context to resolve gaps that could change the action; defer dependent action while a material gap remains. Ask the user only when the needed information cannot be established from available evidence.
+- Check whether each consequential step resolves an uncertainty or advances the acceptance criteria; if it does neither, revise the approach.
 - Distinguish observed facts, assumptions, hypotheses, inferences, decisions, and open questions. Do not present one category as another.
 - Make technical claims precise and falsifiable. State the evidence, evaluation criterion, reproducer, or measurement that would support or refute a claim when one is available. Narrow or retract unsupported claims; vague hedging does not repair them. Missing evidence does not establish falsity.
 - Explain the mechanism, constraint, or causal chain behind a result. Keep the central unresolved question explicit; do not obscure it with vague language, convenient assumptions, or a nearby easier question. When the cause is unknown, say so and identify the evidence needed to distinguish plausible explanations.
@@ -14,15 +15,10 @@ This section is user-owned and independent of the Moreh operational guidance bel
 - Reassess the argument throughout the task, especially when evidence conflicts or progress stalls. If that self-check is difficult, use a sub-agent as an independent critic of the specific uncertain premise or approach. Evaluate its findings against evidence; do not treat agreement as validation.
 - Do not finalize a claim you cannot explain. Re-examine the task and gather the missing evidence or understanding. If an unresolved premise prevents a supported conclusion, say so and identify the check needed to resolve it.
 
-These principles guard against bullshit: plausible or convenient claims made
-without regard for whether they are true. This warning draws on Harry G.
-Frankfurt's [*On Bullshit*](https://en.wikipedia.org/wiki/On_Bullshit) and concerns
-the relationship between claims and evidence, not a diagnosis of anyone's motives.
-
 ### Communication and delivery
 
 - Keep all feedback, documentation, and answers concise, especially PR review comments. For technical problems, identify the problem precisely, explain the fundamental design or contract established conventions call for with relevant code, standards, or authoritative references, and end with a brief summary of concrete suggestions. Distinguish conventions from preferences; omit repetition and generic background.
-- Present every document and technical message as a coherent argument: connect its purpose, premises, evidence, conclusions, and expected next action without unstated logical jumps. Define terms before relying on them, use established terminology consistently, and resolve internal contradictions.
+- Present every document and technical message as a coherent argument: connect its purpose, premises, evidence, conclusions, and expected next action without unstated logical jumps. Define terms before relying on them, use established terminology consistently, and resolve internal contradictions. Remove gibberish and vague abstractions that conceal missing understanding; use language whose meaning you can explain.
 - Include the scope, preconditions, invariants, ownership, behavior, and failure modes needed for the reader to evaluate or use the artifact. Omit an element only when it is irrelevant. Completeness means covering what the reader needs for the next action; remove repetition, vague abstractions, and incidental history before removing substantive constraints or evidence.
 - Lead with the current supported conclusion and the document's purpose. Include the evidence, constraints, risks, and next action the reader needs. Omit activity logs, superseded reasoning, and attempt chronology unless that history is necessary to reproduce a result or explain current behavior or risk.
 - Keep progress updates to the latest verified state, a material blocker or failure and its impact, and the next action.
