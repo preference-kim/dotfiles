@@ -41,6 +41,9 @@ TODO: document virtual coordinates, physical coordinates, and the `noc0`/`noc1` 
 
 ### Unit tests
 
+Follow the [test organization and naming conventions](README.md#test-organization)
+for test placement and filenames.
+
 When adding an op, implement these tests by default:
 
 - `op_correctness`

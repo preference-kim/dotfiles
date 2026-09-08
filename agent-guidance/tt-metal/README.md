@@ -26,6 +26,15 @@ export TT_METAL_RUNTIME_ROOT="${TT_METAL_HOME}"
 export PYTHONPATH="${TT_METAL_HOME}:${TT_METAL_HOME}/ttnn:${TT_METAL_HOME}/tools"
 ```
 
+## Test organization
+
+- Put standalone device-operation tests in `tests/ttnn/unit_tests/operations/moreh`.
+- Put tests for model-internal modules under `models/demos/<moreh implementation>/tests`.
+- Use `test_<op_or_module>.py` as the base filename. Append purpose suffixes before
+  `.py`, such as `test_<op_or_module>_perf.py` or `test_<op_or_module>_util.py`.
+
+Before designing or running performance tests, read [trace capture and profiling](profiling.md).
+
 ## Device locking
 
 This process is required when using shared team device infrastructure. Run `moreh-lock status` to confirm that the current host is registered; it reports the node and its current holder.
@@ -140,8 +149,10 @@ hang-detection thresholds, retry budget, and multi-Galaxy reset escalation.
 Read these references before the corresponding work:
 
 - [Kernel and op development](kernels.md): editing or reviewing kernels or ops.
-- [Debugging and recovery](debugging.md): diagnosing device hangs, initialization
+- [Debugging and recovery](debugging.md): immediately when a TT device experiment
+  takes unexpectedly long, or when diagnosing device hangs, initialization
   failures, or unsuccessful resets, including multi-Galaxy reset escalation.
-- [Trace capture and profiling](profiling.md): TTNN capture/replay, trace-safe tensor
-  debugging, and performance measurement or interpretation.
+- [Trace capture and profiling](profiling.md): planning or implementing device-op
+  or model-module optimization and performance tests; TTNN capture/replay,
+  trace-safe tensor debugging, profiling, and performance measurement or interpretation.
 - [EvalScope metrics](evalscope.md): interpreting speculative acceptance.

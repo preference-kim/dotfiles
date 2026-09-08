@@ -87,6 +87,10 @@ Never silently omit an unexpected error. Report it in terms of its current impac
 
 Stream or periodically retrieve output while a long-running process runs. Detect completion through process status rather than estimated sleeps or log-following alone, and check the result promptly after exit.
 
+If a TT device experiment takes unexpectedly long, immediately read
+[device debugging and recovery](agent-guidance/tt-metal/debugging.md) and follow
+its tt-triage and hang-detection procedure before continuing to wait or retry.
+
 ## Required context, loaded only when relevant
 
 This is the canonical shared guidance for Claude and Codex. Resolve this file's
@@ -107,9 +111,9 @@ every linked document.
 | Hugging Face authentication or Hub operations | `agent-guidance/hugging-face-auth.md` |
 | Starting a Claude subprocess or checking its authentication | `agent-guidance/claude-auth.md`; for reasoning/review also `agent-guidance/claude-model.md` |
 | TT-Metal build, import, test, or workload; touching a TT device; MPI launches or shared writable caches | `agent-guidance/tt-metal/README.md` |
-| Diagnosing TT device hangs, initialization failures, or unsuccessful resets | `agent-guidance/tt-metal/debugging.md`; also the basic guide before device work |
+| A TT device experiment takes unexpectedly long; diagnosing device hangs, initialization failures, or unsuccessful resets | `agent-guidance/tt-metal/debugging.md`; also the basic guide before device work |
 | Editing or reviewing TT-Metal kernels or ops | `agent-guidance/tt-metal/kernels.md`; read the basic guide before execution |
-| TTNN trace capture/replay or performance measurement and interpretation | `agent-guidance/tt-metal/profiling.md`; also the basic guide before execution |
+| Planning or implementing TT device-op/model-module optimization or performance tests; TTNN trace capture/replay, profiling, or performance measurement and interpretation | `agent-guidance/tt-metal/profiling.md`; also the basic guide before execution |
 | Interpreting EvalScope speculative acceptance | `agent-guidance/tt-metal/evalscope.md` |
 
 Never push directly to a project's main branch, resolve human-authored review
