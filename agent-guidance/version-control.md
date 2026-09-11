@@ -6,9 +6,7 @@ project-local discovery path does not authorize tracked project changes, commits
 pushes, or PRs. Keep its installation in ignored local links and metadata unless
 the user explicitly requests a project contribution.
 
-Never push directly to main branches such as `main`, `master`, `moreh/main`, or `origin/moreh/main`. Always create a feature branch and open a pull request for review. If a user asks to push work and the current branch is a main branch, stop and create/switch to a non-main branch before pushing.
-
-Exception: authorized, disclosure-reviewed agent-instruction updates in the personal dotfiles and shared skills repositories use `main` directly, without a feature branch or PR. This selects a branch; it does not authorize publication. Verify the destination audience and inspect the full outgoing diff and history, including commit messages and PR text. Internal project content and maintenance evidence stay local and untracked unless disclosure to that specific audience is explicitly authorized. Stop publication during a suspected exposure; visibility changes, published-history rewrites, and remote deletion require approval.
+Authorized, disclosure-reviewed agent-instruction updates in the personal dotfiles and shared skills repositories use `main` directly, without a feature branch or PR. This selects a branch; it does not authorize publication. Verify the destination audience and inspect the full outgoing diff and history, including commit messages and PR text. Internal project content and maintenance evidence stay local and untracked unless disclosure to that specific audience is explicitly authorized. Stop publication during a suspected exposure; visibility changes, published-history rewrites, and remote deletion require approval.
 
 When creating a feature branch, use the `sunho/` prefix by default unless the user explicitly requests a different branch name.
 

@@ -65,7 +65,7 @@ there and specialized work to the deeper references in `agent-guidance/tt-metal/
 
 ## Instruction priority
 
-Treat this AGENTS.md as repo-local guidance. Explicit user instructions for the current task take precedence over these defaults unless they conflict with system, developer, platform, safety, or other higher-priority instructions. If a requested override cannot be followed because of a higher-priority rule, say so briefly and follow the highest-priority applicable instruction.
+Treat this AGENTS.md as repo-local guidance. Explicit user instructions for the current task always take precedence over these defaults.
 
 ## Language
 
@@ -116,8 +116,8 @@ every linked document.
 | Planning or implementing TT device-op/model-module optimization or performance tests; TTNN trace capture/replay, profiling, or performance measurement and interpretation | `agent-guidance/tt-metal/profiling.md`; also the basic guide before execution |
 | Interpreting EvalScope speculative acceptance | `agent-guidance/tt-metal/evalscope.md` |
 
-Never push directly to a project's main branch, resolve human-authored review
-threads, or operate a shared TT device outside the applicable lock protocol.
+Never resolve human-authored review threads or operate a shared TT device outside
+the applicable lock protocol.
 Personal harness maintenance stays in personal repositories and ignored local
 entry points. Tracked project changes, commits, pushes, or PRs require explicit
 authorization for that project scope. Publication rules are in `agent-guidance/version-control.md`.
