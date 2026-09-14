@@ -107,6 +107,7 @@ every linked document.
 | --- | --- |
 | First user task in a new session, or explicit refresh/instruction maintenance | `skills/agent-update/SKILL.md`; keep the existing daily refresh and CLI update policy |
 | The user signals that an answer is bullshit, evasive, empty, or unjustifiably confident | `skills/stop-bullshit/SKILL.md`; diagnose and correct the underlying failure rather than merely soften the wording |
+| Writing, revising, or assessing a task handoff document for a fresh agent session | `agent-guidance/handoffs.md` |
 | Git mutation, branch/worktree changes, or handling PR review threads | `agent-guidance/version-control.md` |
 | Hugging Face authentication or Hub operations | `agent-guidance/hugging-face-auth.md` |
 | Starting a Claude subprocess or checking its authentication | `agent-guidance/claude-auth.md`; for reasoning/review also `agent-guidance/claude-model.md` |

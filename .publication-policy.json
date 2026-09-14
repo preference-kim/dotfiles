@@ -20,6 +20,7 @@
     "agent-file-sync.example.yaml",
     "agent-guidance/claude-auth.md",
     "agent-guidance/claude-model.md",
+    "agent-guidance/handoffs.md",
     "agent-guidance/hugging-face-auth.md",
     "agent-guidance/tt-metal/README.md",
     "agent-guidance/tt-metal/debugging.md",
