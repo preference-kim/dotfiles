@@ -27,7 +27,7 @@ This section is user-owned and independent of the Moreh operational guidance bel
 
 ### Pull request communication
 
-- Before creating or revising a PR description, load `write-technical-pr`; its policy preserves the Korean Summary, self-contained evidence, reproduction, and final-state requirements.
+- Before creating or revising a PR description, load `write-technical-pr`; its policy preserves the Korean Summary, self-contained evidence, reproduction, and final-state requirements. Every manuscript must be reviewed by a separate agent using `humanizer` and then `stop-bullshit`, revised from the supported findings, and finalized after that pass.
 - Apply the communication structure above to each PR review comment, including the triggering conditions and impact. Keep the explanation and suggestions specific to the finding.
 - Before delivering or posting PR feedback or a PR description, load `stop-bullshit` and apply its final check after prose editing. Check the reviewed material and the review comments themselves. Copy the check into isolated reviewer prompts; preserve each workflow's write and delegation boundaries.
 
@@ -107,7 +107,7 @@ every linked document.
 | --- | --- |
 | First user task in a new session, or explicit refresh/instruction maintenance | `skills/agent-update/SKILL.md`; keep the existing daily refresh and CLI update policy |
 | The user signals that an answer is bullshit, evasive, empty, or unjustifiably confident | `skills/stop-bullshit/SKILL.md`; diagnose and correct the underlying failure rather than merely soften the wording |
-| Writing, revising, or assessing a task handoff document for a fresh agent session | `agent-guidance/handoffs.md` |
+| Writing, revising, or assessing a task handoff document for a fresh agent session | `skills/agent-handoff/SKILL.md`; finalize the reviewed handoff and return its location with the first prompt for the fresh session |
 | Git mutation, branch/worktree changes, or handling PR review threads | `agent-guidance/version-control.md` |
 | Hugging Face authentication or Hub operations | `agent-guidance/hugging-face-auth.md` |
 | Starting a Claude subprocess or checking its authentication | `agent-guidance/claude-auth.md`; for reasoning/review also `agent-guidance/claude-model.md` |
