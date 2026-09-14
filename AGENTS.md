@@ -86,6 +86,8 @@ Never silently omit an unexpected error. Report it in terms of its current impac
 
 ## Long-running experiments
 
+For experiments expected to take tens of minutes or longer, create a local tmux session on the execution host and enter the execution commands in its windows. Use separate named windows for the server and client when both are needed. Verify that the workload and its required services run under tmux independently of the Codex session, and report the host, session name, and attach command. Keep the applicable device locks and monitoring in place.
+
 Stream or periodically retrieve output while a long-running process runs. Detect completion through process status rather than estimated sleeps or log-following alone, and check the result promptly after exit.
 
 If a TT device experiment takes unexpectedly long, immediately read
