@@ -31,3 +31,14 @@ If existing changes prevent a required branch checkout, commit them locally or
 stash them before checking out the branch.
 
 - When making a git commit, never co-author.
+
+## Environment variables before PR submission
+
+Before creating or updating a PR, inspect the complete intended PR diff for
+unnecessary environment-variable settings and usage in code, launch scripts,
+configuration, and documentation. Within the PR's scope, remove temporary
+experiment and debugging variables, including their readers, exports, fallback
+branches, and instructions. Do not expose custom environment variables; retain
+only necessary variables defined by external packages such as vLLM. Verify retained
+variables against the package version in use. When cleanup affects runtime
+behavior, validate that behavior without the removed temporary settings.
