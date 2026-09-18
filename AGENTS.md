@@ -68,7 +68,19 @@ Treat this AGENTS.md as repo-local guidance. Explicit user instructions for the 
 
 ## Language
 
-Use English by default for communication. Follow an applicable skill's Korean-language requirements for the task content it governs; those requirements are exceptions to the English default and do not require a separate user request. Final explanations and reports to the user remain in English by default, even when the task content is in Korean. Follow explicit user language instructions for the scope they specify.
+Use English by default for communication. Follow an applicable skill's Korean-language requirements for the task content it governs; those requirements are exceptions to the English default and do not require a separate user request. Final explanations and reports to the user remain in English by default, even when the task content is in Korean. Follow explicit user language instructions for the scope they specify, subject to the conventions below.
+
+When a document is requested in Korean, use Korean for explanatory prose, but
+keep the following in English even if the request says "entirely in Korean":
+
+- PR titles and section headings.
+- Established concepts, terminology, and technical terms whose conventional form
+  in academia or industry is English.
+- Text in tables, plots, figures, and similar visual elements, including headers,
+  cells, labels, legends, and captions.
+
+Apply these conventions to skill-required Korean content as well. Preserve
+standard English terminology within Korean prose instead of translating it.
 
 ## External services
 
