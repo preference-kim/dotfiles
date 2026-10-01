@@ -59,5 +59,38 @@ class ReplaceTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), b'concurrent edit')
         self.assertEqual(list(self.root.iterdir()), [self.path])
 
+    def test_approved_creation_and_restrictive_umask(self):
+        target = self.root / 'preserve.cfg'
+        self.assertEqual(writer.replace(target, None, b'manage_etc_hosts: false\n', 0o644,
+                                        allow_create=True), 'changed')
+        self.assertEqual(target.stat().st_mode & 0o777, 0o644)
+        self.assertEqual(target.stat().st_nlink, 1)
+        with self.assertRaises(ValueError):
+            writer.replace(target, None, b'changed', 0o644, allow_create=True)
+
+    def test_creation_needs_explicit_authorization(self):
+        with self.assertRaises(FileNotFoundError):
+            writer.replace(self.root / 'missing', None, b'content', 0o644)
+
+    def test_concurrent_creation_cannot_be_overwritten(self):
+        target = self.root / 'new.cfg'
+        original = writer.os.link
+        def concurrent(src, dst):
+            target.write_bytes(b'other owner')
+            return original(src, dst)
+        with patch.object(writer.os, 'link', side_effect=concurrent):
+            with self.assertRaises(FileExistsError):
+                writer.replace(target, None, b'ours', 0o644, allow_create=True)
+        self.assertEqual(target.read_bytes(), b'other owner')
+        self.assertFalse(list(self.root.glob('.agent-update-*')))
+
+    def test_cloud_config_rejects_non_root_owner_and_unrelated_settings(self):
+        with patch.object(writer.os, 'geteuid', return_value=0), patch.object(writer.os, 'getegid', return_value=0):
+            with patch.object(writer, 'snapshot', return_value=(b'old', (501, 20, 0o644))):
+                with self.assertRaises(ValueError):
+                    writer.validate_cloud_config(self.path, 'manage_etc_hosts: false\n')
+            with self.assertRaises(ValueError):
+                writer.validate_cloud_config(self.path, 'manage_etc_hosts: false\nnetwork: disabled\n')
+
 
 unittest.main()

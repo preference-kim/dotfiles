@@ -14,7 +14,7 @@ class ProfileTests(unittest.TestCase):
         before = '127.0.0.1 localhost\n192.0.2.1 node-a old-a\n'
         after = '127.0.0.1 localhost\n# protected\n192.0.2.1 node-a\n'
         if role == 'development-server':
-            after += '# BEGIN agent-update: will be deprecated\n192.0.2.1 old-a\n# END agent-update: will be deprecated\n'
+            after += '# BEGIN Legacy aliases - will be deprecated\n192.0.2.1 old-a\n# END Legacy aliases - will be deprecated\n'
         profile = {'device_role': role, 'expected_hostname': 'machine-a', 'account': 'tester',
                    'hosts_scope': {'managed_node_names': ['node-a'], 'deprecated_alias_policy': 'separate-block' if role == 'development-server' else 'omit'},
                    'files': [{'path': '/etc/hosts', 'before': before, 'after': after}],
@@ -74,8 +74,8 @@ class ProfileTests(unittest.TestCase):
         item = inv['profiles']['device-a']['files'][0]
         canonical = '# protected\n192.0.2.1 node-a\n'
         item['after'] = item['after'].replace(canonical, '').replace(
-            '# BEGIN agent-update: will be deprecated\n',
-            '# BEGIN agent-update: will be deprecated\n' + canonical)
+            '# BEGIN Legacy aliases - will be deprecated\n',
+            '# BEGIN Legacy aliases - will be deprecated\n' + canonical)
         with self.assertRaises(ValueError): self.check(inv, reg)
 
     def test_wrong_role_or_account_rejected(self):
@@ -111,6 +111,50 @@ class ProfileTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.check(inv, reg)
         inv, reg = self.fixture(); inv['nodes'][0]['aliases'] = ['old-a']
         with self.assertRaises(ValueError): self.check(inv, reg)
+
+
+    def test_operational_blocks_cover_scope_and_preserve_external_block(self):
+        inv, reg = self.fixture()
+        inv['nodes'].append({'name': 'node-b', 'ip': '192.0.2.2', 'aliases': []})
+        profile = inv['profiles']['device-a']
+        profile['hosts_scope']['managed_node_names'].append('node-b')
+        profile['hosts_scope']['blocks'] = [
+            {'title': 'Example cluster', 'node_names': ['node-a', 'node-b']}]
+        profile['files'][0]['after'] += '# BEGIN Example cluster\n192.0.2.2 node-b\n# END Example cluster\n'
+        self.assertEqual(self.check(inv, reg), 'device-a')
+        for bad in [[], [{'title': 'Example cluster', 'node_names': ['node-b']}],
+                    [{'title': 'Wrong cluster', 'node_names': ['node-a', 'node-b']}]]:
+            candidate = copy.deepcopy(inv)
+            candidate['profiles']['device-a']['hosts_scope']['blocks'] = bad
+            with self.assertRaises(ValueError): self.check(candidate, reg)
+
+    def test_empty_generated_block_is_omitted_for_preserved_names(self):
+        inv, reg = self.fixture()
+        profile = inv['profiles']['device-a']
+        profile['hosts_scope']['blocks'] = [{'title': 'Example cluster', 'node_names': ['node-a']}]
+        self.assertEqual(self.check(inv, reg), 'device-a')
+        profile['files'][0]['after'] += '# BEGIN Example cluster\n# END Example cluster\n'
+        with self.assertRaises(ValueError): self.check(inv, reg)
+
+    def test_block_and_node_order_are_enforced(self):
+        inv, reg = self.fixture()
+        inv['nodes'] += [{'name': 'node-b', 'ip': '192.0.2.2', 'aliases': []},
+                         {'name': 'node-c', 'ip': '192.0.2.3', 'aliases': []}]
+        profile = inv['profiles']['device-a']
+        profile['preserved_hosts_blocks'] = []
+        profile['hosts_scope']['managed_node_names'] = ['node-a', 'node-b', 'node-c']
+        profile['hosts_scope']['blocks'] = [
+            {'title': 'Example first', 'node_names': ['node-a', 'node-b']},
+            {'title': 'Example second', 'node_names': ['node-c']}]
+        first = '# BEGIN Example first\n192.0.2.1 node-a\n192.0.2.2 node-b\n# END Example first\n'
+        second = '# BEGIN Example second\n192.0.2.3 node-c\n# END Example second\n'
+        item = profile['files'][0]
+        prefix = item['after'].replace('# protected\n192.0.2.1 node-a\n', '')
+        item['after'] = prefix + first + second
+        self.assertEqual(self.check(inv, reg), 'device-a')
+        for bad in [second + first, first.replace('192.0.2.1 node-a\n192.0.2.2 node-b', '192.0.2.2 node-b\n192.0.2.1 node-a') + second]:
+            item['after'] = prefix + bad
+            with self.assertRaises(ValueError): self.check(inv, reg)
 
 
 if __name__ == '__main__':

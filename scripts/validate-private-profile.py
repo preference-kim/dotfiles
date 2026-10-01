@@ -75,8 +75,8 @@ def validate(inventory, registration, hostname, account):
         expected_values = [address, *local_addresses] if name == hostname.lower() else [address]
         require(collections.Counter(values) == collections.Counter(expected_values),
                 'canonical name missing, duplicated or changed')
-    begin = '# BEGIN agent-update: will be deprecated'
-    end = '# END agent-update: will be deprecated'
+    begin = '# BEGIN Legacy aliases - will be deprecated'
+    end = '# END Legacy aliases - will be deprecated'
     if role == 'development-server' and (deprecated or begin in item['after'] or end in item['after']):
         require(item['after'].count(begin) == item['after'].count(end) == 1, 'deprecated block missing or duplicated')
         start = item['after'].index(begin) + len(begin)
@@ -98,6 +98,43 @@ def validate(inventory, registration, hostname, account):
         require(bool(block) and item['after'].count(block) == 1, 'preserved block changed or duplicated')
         for name, addresses in hosts_records(block).items():
             require(name in expected and addresses == [expected[name]], 'preserved block conflicts with scope')
+    if 'blocks' in scope:
+        titles = set()
+        assigned = []
+        previous_end = -1
+        protected_names = set()
+        for preserved in profile.get('preserved_hosts_blocks', []):
+            protected_names.update(hosts_records(preserved))
+        for section in scope['blocks']:
+            title = section['title']
+            require(isinstance(title, str) and bool(title.strip()) and '\n' not in title and '\r' not in title,
+                    'invalid block title')
+            require(title not in titles and title != 'Legacy aliases - will be deprecated', 'duplicate block title')
+            titles.add(title)
+            ids = section['node_names']
+            require(bool(ids) and set(ids) <= set(selected_nodes), 'invalid block scope')
+            assigned.extend(ids)
+            section_names = {alias.lower() for node_id in ids for alias in
+                             [nodes[node_id]['name'], *nodes[node_id]['aliases']]} - protected_names
+            begin, end = '# BEGIN ' + title, '# END ' + title
+            lines = item['after'].splitlines()
+            if not section_names:
+                require(begin not in lines and end not in lines, 'empty canonical block')
+                continue
+            require(lines.count(begin) == lines.count(end) == 1, 'canonical block missing or duplicated')
+            start, stop = lines.index(begin), lines.index(end)
+            require(previous_end < start < stop, 'canonical block order')
+            previous_end = stop
+            content = lines[start + 1:stop]
+            require(not any(line.startswith(('# BEGIN ', '# END ')) for line in content), 'nested canonical block')
+            require(set(hosts_records('\n'.join(content))) == section_names, 'canonical block membership mismatch')
+            actual_order = [alias.lower() for line in content
+                            for alias in line.split('#', 1)[0].split()[1:]]
+            expected_order = [alias.lower() for node_id in ids
+                              for alias in [nodes[node_id]['name'], *nodes[node_id]['aliases']]
+                              if alias.lower() not in protected_names]
+            require(actual_order == expected_order, 'canonical node order mismatch')
+        require(collections.Counter(assigned) == collections.Counter(selected_nodes), 'block assignment mismatch')
     return selected
 
 

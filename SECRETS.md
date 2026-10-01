@@ -5,8 +5,10 @@ token live in a private repository as separate age payloads and recipient lists.
 only reusable instructions, schemas and synthetic tests. Never add actual host
 names, addresses, SSH profiles, deployment targets or recipients here.
 
-Explicitly ask `agent-update` to synchronize server configuration or enrolled
-credentials on the intended host or fleet. A generic `agent-update` request and
+Explicitly ask `agent-update` to update server configuration: it reviews changes
+in the source server lists and updates the current host's `/etc/hosts` and SSH
+configuration through an approved private inventory revision. Enrolled credential
+synchronization is requested separately. A generic `agent-update` request and
 daily refreshes update agent files and tools without fetching, decrypting or
 applying private payloads. Source review alone does not deploy changes.
 The host-local registration at
