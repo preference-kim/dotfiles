@@ -4,8 +4,10 @@ Use bare `hf auth whoami` to check the host's standard credential store. Check
 whether `HF_TOKEN` or `HUGGING_FACE_HUB_TOKEN` overrides it without printing their
 values. Verify persistent authentication with those overrides absent.
 
-If the stored credential is missing or invalid, or an approved token revision
-has changed, read the canonical
+If the stored credential is missing or invalid, report the authentication
+prerequisite. Synchronize it only when the user explicitly requests HF credential
+setup, repair or synchronization; daily and generic agent refreshes do not fetch
+or apply private credentials. For that authorized action, read the canonical
 [private synchronization protocol](../skills/agent-update/references/private-sync.md).
 Fetch and verify the approved HF payload with the registered host's own access
 and age identity. Pipe decrypted bytes directly to

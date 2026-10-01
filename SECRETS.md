@@ -5,7 +5,11 @@ token live in a private repository as separate age payloads and recipient lists.
 only reusable instructions, schemas and synthetic tests. Never add actual host
 names, addresses, SSH profiles, deployment targets or recipients here.
 
-Run `agent-update` on an enrolled host. Its host-local registration at
+Explicitly ask `agent-update` to synchronize server configuration or enrolled
+credentials on the intended host or fleet. A generic `agent-update` request and
+daily refreshes update agent files and tools without fetching, decrypting or
+applying private payloads. Source review alone does not deploy changes.
+The host-local registration at
 `~/.config/agent-update/private-sync.json` selects the private repository,
 profile and local identities. Read the
 [private synchronization protocol](skills/agent-update/references/private-sync.md)

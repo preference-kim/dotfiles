@@ -82,6 +82,8 @@ evaluation data, logs, and incident evidence outside both repositories under
 staged files and outgoing history, but cannot determine whether every passage
 inside an approved file is suitable for public disclosure.
 
-Private server configuration and HF credentials synchronize through `agent-update`
-on each enrolled host. See [secret management](SECRETS.md) for enrollment and the
-separate source-review and approved-deployment workflow.
+Private server configuration and enrolled credentials synchronize through
+`agent-update` only when explicitly requested for that scope. Daily refreshes and
+a generic `agent-update` request do not fetch or apply private payloads. See
+[secret management](SECRETS.md) for enrollment and the separate source-review and
+approved-deployment workflow.
