@@ -9,11 +9,12 @@ Run `agent-update` on an enrolled host. Its host-local registration at
 `~/.config/agent-update/private-sync.json` selects the private repository,
 profile and local identities. Read the
 [private synchronization protocol](skills/agent-update/references/private-sync.md)
-before enrollment, fetching, decryption or installation. Each enrolled server uses its own
-read-only deploy key and generates its own age identities; the initial maintainer
-may retain its existing repository authentication; no personal repository
-credential or another host's private key is copied. A shared home has one set of
-keys and a shared writer lock, with hostname-specific profile selection.
+before enrollment, fetching, decryption or installation. Each enrolled server uses a read-only repository deploy key and separate age
+identities for the two payloads. An explicitly authorized credential group may
+share those three service keys across its members. The initial maintainer may
+retain its existing repository authentication. Personal credentials are not copied.
+A shared home has one set of keys and a shared writer lock, with hostname-specific
+profile selection.
 
 The protocol checks an approval digest at a pinned Git revision before applying
 an inventory plan or piping the HF payload to `scripts/install-hf-credential`.
