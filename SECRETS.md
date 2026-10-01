@@ -24,6 +24,15 @@ Git uses the gh HTTPS credential helper; SSH remotes keep their existing policy.
 A shared home has one set of keys and a shared writer lock, with hostname-specific
 profile selection.
 
+Each device is explicitly registered as `development-server` or `personal-device`,
+independently of OS and agent installation mode. Development servers retain old
+IP aliases in a `will be deprecated` block for shared users and preserve operational
+hosts blocks. Personal devices use the approved canonical names in hosts and SSH.
+A second personal computer gets its own profile, baseline, routes and local key
+paths; it does not copy the controller's registration. Inventory-only setup does
+not enroll account credentials. The private profile determines node scope as well
+as role, and explicit synchronization remains required after setup.
+
 The protocol checks an approval digest at a pinned Git revision before applying
 any enrolled payload, including an inventory plan or piping the HF payload to `scripts/install-hf-credential`.
 The installer accepts the token only on stdin, uses the installed HF library's

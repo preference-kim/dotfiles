@@ -8,7 +8,8 @@
     "profile",
     "expected_hostname",
     "inventory_identity",
-    "hf_identity"
+    "device_role",
+    "account"
   ],
   "properties": {
     "schema_version": {
@@ -54,6 +55,17 @@
       "minLength": 1
     },
     "github_account": {
+      "type": "string",
+      "minLength": 1
+    },
+    "device_role": {
+      "type": "string",
+      "enum": [
+        "development-server",
+        "personal-device"
+      ]
+    },
+    "account": {
       "type": "string",
       "minLength": 1
     }

@@ -51,6 +51,8 @@
     "schemas/private-registration.schema.json",
     "scripts/replace-managed-file.py",
     "scripts/test_replace_managed_file.py",
-    "schemas/private-approval.schema.json"
+    "schemas/private-approval.schema.json",
+    "scripts/validate-private-profile.py",
+    "scripts/test_validate_private_profile.py"
   ]
 }
