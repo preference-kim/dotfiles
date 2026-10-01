@@ -71,8 +71,7 @@
           "ssh_equivalence",
           "device_role",
           "expected_hostname",
-          "account",
-          "hosts_scope"
+          "account"
         ],
         "properties": {
           "files": {
@@ -206,8 +205,56 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "configuration_owner": {
+            "type": "string",
+            "minLength": 1
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "hosts_scope"
+            ],
+            "not": {
+              "required": [
+                "configuration_owner"
+              ]
+            }
+          },
+          {
+            "required": [
+              "configuration_owner"
+            ],
+            "properties": {
+              "files": {
+                "maxItems": 0
+              },
+              "ssh_equivalence": {
+                "maxItems": 0
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "hosts_scope"
+                  ]
+                },
+                {
+                  "required": [
+                    "preserved_hosts_blocks"
+                  ]
+                },
+                {
+                  "required": [
+                    "authorized_alias_removals"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       }
     },
     "targets": {

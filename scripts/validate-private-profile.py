@@ -39,6 +39,24 @@ def validate(inventory, registration, hostname, account):
     require(profile.get('expected_hostname') == hostname, 'profile hostname mismatch')
     require(profile.get('account') == account, 'profile account mismatch')
     require(profile.get('device_role') == role, 'profile role mismatch')
+    owner_id = profile.get('configuration_owner')
+    if 'configuration_owner' in profile:
+        require(isinstance(owner_id, str) and bool(owner_id) and owner_id != selected,
+                'invalid configuration owner')
+        owner = inventory['profiles'].get(owner_id)
+        require(isinstance(owner, dict) and 'configuration_owner' not in owner,
+                'configuration owner must be a managing profile')
+        require(owner.get('account') == account and owner.get('device_role') == role,
+                'configuration owner identity mismatch')
+        require('hosts_scope' in owner and
+                sum(item['path'] == '/etc/hosts' for item in owner['files']) == 1,
+                'configuration owner has no hosts plan')
+        require(profile.get('files') == [] and profile.get('ssh_equivalence') == [],
+                'delegated configuration must have no file plans')
+        require(not any(key in profile for key in
+                        ('hosts_scope', 'preserved_hosts_blocks', 'authorized_alias_removals')),
+                'delegated configuration must have no local hosts scope')
+        return selected
     nodes = {}
     all_names = set()
     for node in inventory['nodes']:
@@ -141,8 +159,9 @@ def validate(inventory, registration, hostname, account):
 def main():
     try:
         data = json.load(sys.stdin)
-        validate(data['inventory'], data['registration'], socket.gethostname(), getpass.getuser())
-        print(json.dumps({'verified': True}))
+        selected = validate(data['inventory'], data['registration'], socket.gethostname(), getpass.getuser())
+        owner = data['inventory']['profiles'][selected].get('configuration_owner', selected)
+        print(json.dumps({'verified': True, 'configuration_owner': owner, 'applies_here': owner == selected}))
         return 0
     except (KeyError, TypeError, ValueError) as error:
         print(json.dumps({'verified': False, 'error_type': type(error).__name__}))

@@ -156,6 +156,53 @@ class ProfileTests(unittest.TestCase):
             item['after'] = prefix + bad
             with self.assertRaises(ValueError): self.check(inv, reg)
 
+    def delegated_fixture(self):
+        inv, reg = self.fixture()
+        owner = inv['profiles'].pop('device-a')
+        owner['expected_hostname'] = 'machine-b'
+        inv['profiles']['device-b'] = owner
+        inv['profiles']['device-a'] = {
+            'device_role': 'development-server', 'account': 'tester',
+            'expected_hostname': 'machine-a', 'configuration_owner': 'device-b',
+            'files': [], 'ssh_equivalence': []}
+        reg['host_profiles'] = {'machine-a': 'device-a', 'machine-b': 'device-b'}
+        return inv, reg
+
+    def test_delegated_profile_preserves_enrollment_without_file_plans(self):
+        inv, reg = self.delegated_fixture()
+        before = copy.deepcopy(reg)
+        self.assertEqual(self.check(inv, reg), 'device-a')
+        self.assertEqual(reg, before)
+        self.assertEqual(module.validate(inv, reg, 'machine-b', 'tester'), 'device-b')
+
+    def test_delegated_profile_rejects_local_file_or_scope_plans(self):
+        for key, value in [('files', [{'path': '/etc/hosts'}]),
+                           ('ssh_equivalence', [['old', 'new']]),
+                           ('hosts_scope', {}), ('preserved_hosts_blocks', []),
+                           ('authorized_alias_removals', [])]:
+            inv, reg = self.delegated_fixture()
+            inv['profiles']['device-a'][key] = value
+            with self.assertRaises(ValueError): self.check(inv, reg)
+
+    def test_delegation_rejects_missing_self_or_chained_owner(self):
+        for value in ['missing', 'device-a', '', None, 42]:
+            inv, reg = self.delegated_fixture()
+            inv['profiles']['device-a']['configuration_owner'] = value
+            with self.assertRaises(ValueError): self.check(inv, reg)
+        inv, reg = self.delegated_fixture()
+        inv['profiles']['device-b']['configuration_owner'] = 'device-a'
+        with self.assertRaises(ValueError): self.check(inv, reg)
+
+    def test_delegation_preserves_binding_and_owner_identity_checks(self):
+        for profile_id, key, value in [
+                ('device-a', 'expected_hostname', 'machine-b'),
+                ('device-b', 'account', 'someone-else'),
+                ('device-b', 'device_role', 'personal-device'),
+                ('device-b', 'files', [])]:
+            inv, reg = self.delegated_fixture()
+            inv['profiles'][profile_id][key] = value
+            with self.assertRaises(ValueError): self.check(inv, reg)
+
 
 if __name__ == '__main__':
     unittest.main()

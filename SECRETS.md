@@ -5,9 +5,10 @@ token live in a private repository as separate age payloads and recipient lists.
 only reusable instructions, schemas and synthetic tests. Never add actual host
 names, addresses, SSH profiles, deployment targets or recipients here.
 
-Explicitly ask `agent-update` to update server configuration: it reviews changes
-in the source server lists and updates the current host's `/etc/hosts` and SSH
-configuration through an approved private inventory revision. Enrolled credential
+Explicitly ask `agent-update` to update server configuration. An owning profile
+reviews source server-list changes and updates the current host's `/etc/hosts`
+and SSH configuration through an approved private inventory revision. A delegated
+profile reports its configuration owner and preserves local files. Enrolled credential
 synchronization is requested separately. A generic `agent-update` request and
 daily refreshes update agent files and tools without fetching, decrypting or
 applying private payloads. Source review alone does not deploy changes.
@@ -27,8 +28,8 @@ A shared home has one set of keys and a shared writer lock, with hostname-specif
 profile selection.
 
 Each device is explicitly registered as `development-server` or `personal-device`,
-independently of OS and agent installation mode. Development servers retain old
-IP aliases in a `will be deprecated` block for shared users and preserve operational
+independently of OS and agent installation mode. Owning development-server
+profiles retain old IP aliases in a `will be deprecated` block for shared users and preserve operational
 hosts blocks. Personal devices use the approved canonical names in hosts and SSH.
 A second personal computer gets its own profile, baseline, routes and local key
 paths; it does not copy the controller's registration. Inventory-only setup does
