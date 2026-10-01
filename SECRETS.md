@@ -1,54 +1,28 @@
-# Secret management
+# Private host configuration and credentials
 
-The Hugging Face token is committed only as the `age`-encrypted
-`.hf-token.age` file. Its pinned SSH recipients are public values in
-`.hf-token.recipients`; the plaintext `.hf-token` source is ignored by Git.
+Server inventory and the Hugging Face token live in a private repository as
+separate age payloads with separate recipient lists. Public dotfiles contains
+only reusable instructions, schemas and synthetic tests. Never add actual host
+names, addresses, SSH profiles, deployment targets or recipients here.
 
-## Use on a configured machine
+Run `agent-update` on an enrolled host. Its host-local registration at
+`~/.config/agent-update/private-sync.json` selects the private repository,
+profile and local identities. Read the
+[private synchronization protocol](skills/agent-update/references/private-sync.md)
+before enrollment, fetching, decryption or installation. Each enrolled server uses its own
+read-only deploy key and generates its own age identities; the initial maintainer
+may retain its existing repository authentication; no personal repository
+credential or another host's private key is copied. A shared home has one set of
+keys and a shared writer lock, with hostname-specific profile selection.
 
-Install `age` through the host's package manager. The machine must have an
-on-disk RSA or Ed25519 SSH private key whose companion public key is listed in
-`.hf-token.recipients`. A key registered with GitHub but absent from the machine,
-a forwarded `ssh-agent`, and a hardware-held key cannot decrypt this ciphertext.
+The protocol checks an approval digest at a pinned Git revision before applying
+an inventory plan or piping the HF payload to `scripts/install-hf-credential`.
+The installer accepts the token only on stdin, uses the installed HF library's
+standard credential paths, enforces mode 0600, backs up changed credentials and
+verifies authentication. It does not fetch or approve private updates.
 
-Install the decrypted token into the host's standard Hugging Face credential
-store, then verify a bare CLI invocation:
-
-```bash
-./scripts/install-hf-credential
-hf auth whoami
-```
-
-The installer selects a matching `~/.ssh/*.pub` and private-key pair, decrypts
-the token in memory, and passes it to the installed Hugging Face client through
-`HF_TOKEN`, never a command argument. The client writes its standard local token
-files, and the installer enforces mode `0600`. If the public companion file is
-absent, identify the private-key file explicitly:
-
-```bash
-HF_TOKEN_SSH_IDENTITY="$HOME/.ssh/id_ed25519" \
-  ./scripts/install-hf-credential
-```
-
-For a process-scoped credential that does not update the local credential
-store, run `./scripts/with-hf-token <command> [args ...]` instead.
-
-## Add or remove a machine
-
-Add the machine's supported GitHub SSH public key to `.hf-token.recipients`, or
-remove a retired key, on a machine that already has the plaintext `.hf-token`.
-Then regenerate the ciphertext:
-
-```bash
-./scripts/update-hf-token-ciphertext.sh
-```
-
-Commit the recipients file and ciphertext together. Do not fetch the GitHub
-profile dynamically while decrypting: a reviewed, pinned recipient set defines
-who can recover the secret. Removing a key from GitHub or from the recipients
-file does not revoke an old ciphertext already copied elsewhere. If a private
-key may be compromised, rotate the Hugging Face token and regenerate the
-ciphertext for the retained recipients.
-
-Never print, log, commit, or pass the plaintext token as a command-line
-argument. Do not write it outside the standard Hugging Face credential store.
+Public ciphertext and recipient files have been removed from the current tree.
+Historical Git objects and previously copied ciphertext remain accessible. The
+token has not been rotated: old recipients can still decrypt their old copy.
+Discuss token rotation and any published-history rewrite before performing either.
+Recipient removal alone does not revoke an already recovered token.

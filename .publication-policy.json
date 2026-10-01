@@ -6,8 +6,6 @@
     ".gitignore",
     ".gitleaks.toml",
     ".gitmodules",
-    ".hf-token.age",
-    ".hf-token.recipients",
     ".publication-policy.json",
     ".secrets.example",
     ".tmux.conf",
@@ -36,8 +34,6 @@
     "scripts/openfortivpn-watchdog.sh",
     "scripts/publication-guard.py",
     "scripts/test_publication_guard.py",
-    "scripts/update-hf-token-ciphertext.sh",
-    "scripts/with-hf-token",
     "skills",
     "ubuntu/README.md",
     "ubuntu/others/after_install_ubuntu22.md",
@@ -48,6 +44,13 @@
     "ubuntu/others/terminal_and_shell.md",
     "ubuntu/others/turnoff_issue.md",
     "ubuntu/setup_ubuntu.sh",
-    "zsh/interactive.zsh"
+    "zsh/interactive.zsh",
+    "scripts/install-hf-from-stdin.py",
+    "scripts/test_install_hf_from_stdin.py",
+    "schemas/private-inventory.schema.json",
+    "schemas/private-registration.schema.json",
+    "scripts/replace-managed-file.py",
+    "scripts/test_replace_managed_file.py",
+    "schemas/private-approval.schema.json"
   ]
 }

@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "approval",
+    "nodes",
+    "profiles",
+    "targets",
+    "sources"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "approval": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "draft",
+            "approved"
+          ]
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "ip",
+          "aliases"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9.-]*$"
+          },
+          "ip": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9.-]*$"
+            }
+          }
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "files",
+          "ssh_equivalence"
+        ],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "path",
+                "before",
+                "after",
+                "mode"
+              ],
+              "properties": {
+                "path": {
+                  "enum": [
+                    "/etc/hosts",
+                    "~/.ssh/config",
+                    "~/.ssh/moreh_cluster.conf"
+                  ]
+                },
+                "before": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "after": {
+                  "type": "string"
+                },
+                "mode": {
+                  "enum": [
+                    "0600",
+                    "0644"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "ssh_equivalence": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "sources": {
+      "type": [
+        "object",
+        "array"
+      ]
+    }
+  }
+}

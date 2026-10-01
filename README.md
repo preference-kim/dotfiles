@@ -81,3 +81,7 @@ evaluation data, logs, and incident evidence outside both repositories under
 `${XDG_STATE_HOME:-$HOME/.local/state}/agent-update/`. The local Git guards check
 staged files and outgoing history, but cannot determine whether every passage
 inside an approved file is suitable for public disclosure.
+
+Private server configuration and HF credentials synchronize through `agent-update`
+on each enrolled host. See [secret management](SECRETS.md) for enrollment and the
+separate source-review and approved-deployment workflow.

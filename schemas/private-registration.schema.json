@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "repository_url",
+    "checkout",
+    "profile",
+    "expected_hostname",
+    "inventory_identity",
+    "hf_identity"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "repository_url": {
+      "type": "string",
+      "minLength": 1
+    },
+    "checkout": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected_hostname": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inventory_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hf_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "host_profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "additionalProperties": false
+}

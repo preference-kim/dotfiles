@@ -1,10 +1,20 @@
 ### Hugging Face authentication
 
-Treat a successful bare `hf auth whoami` as the authentication check for Hugging Face Hub operations. If it fails because no usable credential is configured, install the `age`-encrypted token from the canonical dotfiles repository into that host's standard Hugging Face credential store instead of starting an interactive or browser login:
+Use bare `hf auth whoami` to check the host's standard credential store. Check
+whether `HF_TOKEN` or `HUGGING_FACE_HUB_TOKEN` overrides it without printing their
+values. Verify persistent authentication with those overrides absent.
 
-- Resolve the dotfiles root from the canonical `AGENTS.md`; do not assume a host-specific clone path. Require `age`, the tracked `.hf-token.age` ciphertext, and an on-disk RSA or Ed25519 SSH private key whose public key is listed in `.hf-token.recipients`. A GitHub registration or forwarded `ssh-agent` without the private-key file is insufficient.
-- Run `<dotfiles>/scripts/install-hf-credential`, then rerun bare `hf auth whoami`. The installer decrypts the token in memory, passes it through `HF_TOKEN` rather than a command argument, and writes it only through the installed Hugging Face client to that host's standard credential store with mode `0600`. Set `HF_TOKEN_SSH_IDENTITY` to the matching private-key path only when companion `.pub` auto-discovery cannot select it.
-- Use `<dotfiles>/scripts/with-hf-token <command> [args ...]` only when a process-scoped credential is explicitly preferable to persistent local login. It decrypts the token in memory, exports `HF_TOKEN` only to the child process, and does not update the credential store.
-- If `age`, a matching private key, decryption, or the authenticated check is unavailable, report that exact prerequisite and stop. Do not start another login flow, mint a replacement token, or write a plaintext token without explicit authorization.
+If the stored credential is missing or invalid, or an approved token revision
+has changed, read the canonical
+[private synchronization protocol](../skills/agent-update/references/private-sync.md).
+Fetch and verify the approved HF payload with the registered host's own access
+and age identity. Pipe decrypted bytes directly to
+`<dotfiles>/scripts/install-hf-credential`; never pass the token in argv, log it,
+or save plaintext outside the standard Hugging Face store and its protected
+recovery backups. The installer locates the HF CLI's Python runtime, uses its
+configured credential paths and verifies mode 0600 and authentication.
 
-Never print or commit the token, pass it in a command argument, or write a plaintext copy outside the standard Hugging Face credential store during fallback. GitHub key removal does not revoke access to an existing ciphertext; after a recipient-key compromise, rotate the Hugging Face token and re-encrypt it to the retained recipients.
+Missing enrollment, tools, decryption access or failed verification is a reported
+prerequisite failure. Do not fall back to historical public ciphertext, another
+host's private keys, interactive login or token creation. Token rotation and
+changes to the recipient population require explicit authorization.
