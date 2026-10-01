@@ -37,13 +37,18 @@ Edit the ignored `agent-file-sync.local.yaml` for this host:
 
 | Mode | Instruction and skill discovery |
 | --- | --- |
-| `host-global` | Instruction links under `~/.codex` and `~/.claude`, with individual shared-skill links in each tool's `skills` directory. |
-| `moreh-dev` | Instruction links at the configured development checkout's root, with individual skill links under its `.codex/skills` and `.claude/skills` directories. |
+| `host-global` | Global instruction links; user-scope skills at `~/.agents/skills` (Codex) and `~/.claude/skills` (Claude). Project-only skills are excluded. |
+| `moreh-dev` | The same user-scope skills globally; project instructions and project-only skills under the configured checkout’s `.agents/skills` and `.claude/skills`. |
 
 For `moreh-dev`, set `moreh_dev_root` to an existing Git checkout. Relative paths
 are resolved from this repository; absolute paths are used as written. The
-updater requires a valid configuration and preserves independent local or
-project-owned skills.
+updater requires a valid mode and preserves independent local or project-owned
+skills. An invalid project root blocks project installation while user-scope
+skills can still install; the refresh is not marked successful.
+
+The shared `.installation-policy.json` assigns every approved skill to `user`
+or `moreh-dev`, independently of publication approval. Individual symlinks point
+to canonical sources; resolve those sources before reading relative references.
 
 Ask Claude or Codex to read and follow
 [skills/agent-update/SKILL.md](https://github.com/preference-kim/my-claude-skills/blob/main/agent-update/SKILL.md) from this checkout.

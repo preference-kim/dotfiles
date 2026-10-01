@@ -1,27 +1,21 @@
-# Template for agent-file-sync.local.yaml (see AGENTS.md, "Agent file sync").
+# Copy to agent-file-sync.local.yaml and select this host's mode.
+# The local file is gitignored; another host never changes this configuration.
 #
-# Copy this file to agent-file-sync.local.yaml at the dotfiles root and set
-# this host's mode. agent-file-sync.local.yaml is gitignored and never
-# committed: it is a host-local setting, not something any agent-update run
-# reads or writes on a different host.
+# Both modes install user-scope skills from skills/.installation-policy.json:
+#   Codex: ~/.agents/skills/<name>
+#   Claude: ~/.claude/skills/<name>
 #
-# Modes:
-#   host-global  - ~/.codex/AGENTS.md and ~/.claude/CLAUDE.md are symlinks to
-#                  <dotfiles>/.codex/AGENTS.md and <dotfiles>/.claude/CLAUDE.md;
-#                  shared skills are exposed at ~/.codex/skills/<name> and
-#                  ~/.claude/skills/<name>.
-#   moreh-dev    - the Git checkout configured by moreh_dev_root carries the
-#                  root AGENTS.md/CLAUDE.md and .codex/skills/<name>,
-#                  .claude/skills/<name> links instead; no host-global entries
-#                  are made.
+# host-global: instruction links at ~/.codex/AGENTS.md and ~/.claude/CLAUDE.md.
+#              moreh-dev-scope skills are intentionally not installed.
+# moreh-dev:   instruction links at <moreh_dev_root>/AGENTS.md and CLAUDE.md;
+#              moreh-dev-scope skills at that checkout's .agents/skills/<name>
+#              and .claude/skills/<name>. No host-global instructions are added.
 #
-# moreh_dev_root is required in moreh-dev mode. Relative paths are resolved
-# from the dotfiles root; absolute paths are used as written. The target must
-# already exist and be the root of a Git checkout. agent-update never searches
-# for, creates, or clones a target.
-#
-# If agent-file-sync.local.yaml is absent, its mode is invalid, or moreh-dev
-# lacks a valid moreh_dev_root, agent-update must stop and ask rather than
-# guess, search for a checkout, or fall back to a default.
+# moreh_dev_root must name an existing Git checkout root in moreh-dev mode.
+# Resolve relative paths from dotfiles; use absolute paths as written.
+# Never search for, create, or clone an alternate target.
+# An absent/invalid mode blocks installation. An invalid moreh_dev_root blocks
+# project installation only; user-scope skills still install, but the refresh
+# cannot receive a successful-sync stamp.
 mode: host-global
 # moreh_dev_root: ../moreh-metal
