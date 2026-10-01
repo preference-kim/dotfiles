@@ -1,7 +1,7 @@
 # Private host configuration and credentials
 
-Server inventory and the Hugging Face token live in a private repository as
-separate age payloads with separate recipient lists. Public dotfiles contains
+Server inventory, the Hugging Face token and an optionally enrolled GitHub account
+token live in a private repository as separate age payloads and recipient lists. Public dotfiles contains
 only reusable instructions, schemas and synthetic tests. Never add actual host
 names, addresses, SSH profiles, deployment targets or recipients here.
 
@@ -10,14 +10,18 @@ Run `agent-update` on an enrolled host. Its host-local registration at
 profile and local identities. Read the
 [private synchronization protocol](skills/agent-update/references/private-sync.md)
 before enrollment, fetching, decryption or installation. Each enrolled server uses a read-only repository deploy key and separate age
-identities for the two payloads. An explicitly authorized credential group may
+identities for inventory and HF. An explicitly authorized credential group may
 share those three service keys across its members. The initial maintainer may
-retain its existing repository authentication. Personal credentials are not copied.
+retain its existing repository authentication. GitHub account access may also be explicitly enrolled with a separately encrypted
+and approved token. Headless servers store it in the standard gh credential file
+with mode 0600; the account and target authorization remain private. Its age
+identity may be shared with HF only for members authorized for both payloads.
+Git uses the gh HTTPS credential helper; SSH remotes keep their existing policy.
 A shared home has one set of keys and a shared writer lock, with hostname-specific
 profile selection.
 
 The protocol checks an approval digest at a pinned Git revision before applying
-an inventory plan or piping the HF payload to `scripts/install-hf-credential`.
+any enrolled payload, including an inventory plan or piping the HF payload to `scripts/install-hf-credential`.
 The installer accepts the token only on stdin, uses the installed HF library's
 standard credential paths, enforces mode 0600, backs up changed credentials and
 verifies authentication. It does not fetch or approve private updates.

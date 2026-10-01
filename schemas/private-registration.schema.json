@@ -48,7 +48,23 @@
     "credential_group": {
       "type": "string",
       "minLength": 1
+    },
+    "github_identity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "github_account": {
+      "type": "string",
+      "minLength": 1
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "dependentRequired": {
+    "github_identity": [
+      "github_account"
+    ],
+    "github_account": [
+      "github_identity"
+    ]
+  }
 }
