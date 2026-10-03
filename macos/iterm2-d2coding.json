@@ -1,0 +1,14 @@
+{
+  "Profiles": [
+    {
+      "Name": "D2Coding",
+      "Guid": "b6c9e6f1-4dd8-4d80-83b1-52f01c201400",
+      "Dynamic Profile Parent Name": "Default",
+      "Normal Font": "D2Coding 13",
+      "Non Ascii Font": "D2Coding 13",
+      "Use Non-ASCII Font": false,
+      "ASCII Ligatures": false,
+      "Non-ASCII Ligatures": false
+    }
+  ]
+}

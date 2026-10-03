@@ -53,6 +53,10 @@
     "scripts/test_replace_managed_file.py",
     "schemas/private-approval.schema.json",
     "scripts/validate-private-profile.py",
-    "scripts/test_validate_private_profile.py"
+    "scripts/test_validate_private_profile.py",
+    "macos/README.md",
+    "macos/install-d2coding.py",
+    "macos/iterm2-d2coding.json",
+    "macos/vscode-fonts.json"
   ]
 }

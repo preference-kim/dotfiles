@@ -14,6 +14,7 @@ Ubuntu setup, and credential-management resources.
 | [skills/](https://github.com/preference-kim/my-claude-skills) | Shared skills from `preference-kim/my-claude-skills`, including `agent-update` and `stop-bullshit`. |
 | [agent-file-sync.example.yaml](agent-file-sync.example.yaml) | Template for choosing where each host exposes instructions and skills. |
 | [zsh/interactive.zsh](zsh/interactive.zsh), [.tmux.conf](.tmux.conf) | Interactive shell and tmux configuration. |
+| [macos/](macos/README.md) | Pinned D2Coding installation and VS Code/iTerm2 font settings. |
 | [ubuntu/](ubuntu/README.md), [git.conf.sh](git.conf.sh) | Ubuntu setup notes and scripts, and personal Git defaults. |
 | [scripts/](scripts/), [SECRETS.md](SECRETS.md) | Publication guards, credential helpers, and VPN service scripts. |
 | [PUBLICATION.md](PUBLICATION.md) | Public-content boundaries and Git publication controls. |
