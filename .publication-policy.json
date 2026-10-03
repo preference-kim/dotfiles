@@ -57,6 +57,8 @@
     "macos/README.md",
     "macos/install-d2coding.py",
     "macos/iterm2-d2coding.json",
-    "macos/vscode-fonts.json"
+    "macos/vscode-fonts.json",
+    "scripts/render-private-ssh.py",
+    "scripts/test_render_private_ssh.py"
   ]
 }

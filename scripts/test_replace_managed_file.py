@@ -1,5 +1,7 @@
 """Synthetic files only; supply an explicit private test work directory."""
 import importlib.util
+import contextlib
+import io
 import os
 from pathlib import Path
 import shutil
@@ -71,6 +73,23 @@ class ReplaceTests(unittest.TestCase):
     def test_creation_needs_explicit_authorization(self):
         with self.assertRaises(FileNotFoundError):
             writer.replace(self.root / 'missing', None, b'content', 0o644)
+
+    def test_cli_creates_generated_include_but_not_personal_entry_point(self):
+        target = self.root / 'moreh_cluster.conf'
+        data = {'path': '~/.ssh/moreh_cluster.conf', 'before': None,
+                'after': 'Host example\n    HostName 192.0.2.10\n', 'mode': '0600'}
+        with patch.object(writer.json, 'load', return_value=data), \
+             patch.object(writer.Path, 'expanduser', return_value=target), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(writer.main(), 0)
+        self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(target.read_text(), data['after'])
+        data['path'] = '~/.ssh/config'
+        with patch.object(writer.json, 'load', return_value=data), \
+             patch.object(writer.Path, 'expanduser', return_value=self.root / 'config'), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(writer.main(), 1)
+        self.assertFalse((self.root / 'config').exists())
 
     def test_concurrent_creation_cannot_be_overwritten(self):
         target = self.root / 'new.cfg'

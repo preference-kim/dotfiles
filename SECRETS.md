@@ -31,10 +31,18 @@ Each device is explicitly registered as `development-server` or `personal-device
 independently of OS and agent installation mode. Owning development-server
 profiles retain old IP aliases in a `will be deprecated` block for shared users and preserve operational
 hosts blocks. Personal devices use the approved canonical names in hosts and SSH.
-A second personal computer gets its own profile, baseline, routes and local key
-paths; it does not copy the controller's registration. Inventory-only setup does
+A second personal computer gets its own registration and selects a shared SSH
+context with its existing local key paths. It does not copy the controller's
+registration or duplicate its SSH file. Inventory-only setup does
 not enroll account credentials. The private profile determines node scope as well
 as role, and explicit synchronization remains required after setup.
+
+SSH destinations and route metadata live once in the version-two inventory.
+Shared option sets and network contexts generate `~/.ssh/moreh_cluster.conf`;
+personal rules remain in `~/.ssh/config`, which includes that file. Profiles
+select contexts instead of storing complete SSH configurations. Review every
+consumer of a shared change, and keep migration plans and backups in protected
+local state. See the [SSH configuration contract](skills/agent-update/references/private-ssh.md).
 
 The protocol checks an approval digest at a pinned Git revision before applying
 any enrolled payload, including an inventory plan or piping the HF payload to `scripts/install-hf-credential`.

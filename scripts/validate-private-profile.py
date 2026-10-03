@@ -4,6 +4,8 @@ import collections
 import getpass
 import ipaddress
 import json
+from pathlib import Path
+import runpy
 import socket
 import sys
 
@@ -39,6 +41,11 @@ def validate(inventory, registration, hostname, account):
     require(profile.get('expected_hostname') == hostname, 'profile hostname mismatch')
     require(profile.get('account') == account, 'profile account mismatch')
     require(profile.get('device_role') == role, 'profile role mismatch')
+    if inventory.get('schema_version') == 2:
+        renderer = runpy.run_path(str(Path(__file__).with_name('render-private-ssh.py')))
+        renderer['validate_catalog'](inventory)
+        if 'ssh' in profile:
+            renderer['render'](inventory, selected)
     owner_id = profile.get('configuration_owner')
     if 'configuration_owner' in profile:
         require(isinstance(owner_id, str) and bool(owner_id) and owner_id != selected,

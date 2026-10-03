@@ -11,7 +11,10 @@
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "enum": [
+        1,
+        2
+      ]
     },
     "approval": {
       "type": "object",
@@ -209,6 +212,35 @@
           "configuration_owner": {
             "type": "string",
             "minLength": 1
+          },
+          "ssh": {
+            "type": "object",
+            "required": [
+              "context",
+              "bindings"
+            ],
+            "properties": {
+              "context": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bindings": {
+                "type": "object",
+                "propertyNames": {
+                  "enum": [
+                    "identity_file",
+                    "known_hosts_file",
+                    "login_identity_file",
+                    "login_known_hosts_file"
+                  ]
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "additionalProperties": false
           }
         },
         "oneOf": [
@@ -250,6 +282,11 @@
                   "required": [
                     "authorized_alias_removals"
                   ]
+                },
+                {
+                  "required": [
+                    "ssh"
+                  ]
                 }
               ]
             }
@@ -268,6 +305,188 @@
         "object",
         "array"
       ]
+    },
+    "ssh": {
+      "type": "object",
+      "required": [
+        "option_sets",
+        "rules",
+        "contexts",
+        "bindings"
+      ],
+      "properties": {
+        "option_sets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "propertyNames": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          }
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "option_sets"
+            ],
+            "properties": {
+              "nodes": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "hosts": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aliases": {
+                "enum": [
+                  "name",
+                  "canonical",
+                  "all",
+                  "named"
+                ]
+              },
+              "option_sets": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "exclude_aliases": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "nodes"
+                ],
+                "not": {
+                  "required": [
+                    "hosts"
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "hosts"
+                ],
+                "not": {
+                  "required": [
+                    "nodes"
+                  ]
+                }
+              }
+            ],
+            "additionalProperties": false
+          },
+          "propertyNames": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          }
+        },
+        "contexts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "rules",
+              "bindings"
+            ],
+            "properties": {
+              "rules": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "bindings": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "propertyNames": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          }
+        },
+        "bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": 2
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "ssh"
+        ],
+        "properties": {
+          "profiles": {
+            "additionalProperties": {
+              "properties": {
+                "files": {
+                  "items": {
+                    "properties": {
+                      "path": {
+                        "enum": [
+                          "/etc/hosts",
+                          "/etc/cloud/cloud.cfg.d/99-moreh-preserve-hosts.cfg"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

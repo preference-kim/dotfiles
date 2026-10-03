@@ -84,8 +84,9 @@ def main():
         if cloud_config:
             validate_cloud_config(Path(data['path']), data['after'])
         before = data['before'].encode() if data['before'] is not None else None
+        allow_create = cloud_config or data['path'] == '~/.ssh/moreh_cluster.conf'
         result = replace(Path(data['path']).expanduser(), before,
-                         data['after'].encode(), mode, allow_create=cloud_config)
+                         data['after'].encode(), mode, allow_create=allow_create)
         print(json.dumps({'status': result, 'verified': True}))
         return 0
     except Exception as error:
