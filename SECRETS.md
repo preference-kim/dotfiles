@@ -5,13 +5,13 @@ token live in a private repository as separate age payloads and recipient lists.
 only reusable instructions, schemas and synthetic tests. Never add actual host
 names, addresses, SSH profiles, deployment targets or recipients here.
 
-Explicitly ask `agent-update` to update server configuration. An owning profile
-reviews source server-list changes and updates the current host's `/etc/hosts`
-and SSH configuration through an approved private inventory revision. A delegated
-profile reports its configuration owner and preserves local files. Enrolled credential
-synchronization is requested separately. A generic `agent-update` request and
-daily refreshes update agent files and tools without fetching, decrypting or
-applying private payloads. Source review alone does not deploy changes.
+Every `agent-update` refresh, including a same-day refresh, fetches the approved
+private inventory and synchronizes the current enrolled owner's generated SSH
+include. Missing registration is skipped; a delegated profile reports its owner.
+Source review and enrollment are requested separately. `/etc/hosts` and its
+cloud-init preservation setting change only on an explicit hosts-file request;
+credential synchronization also requires its own request. Source review alone
+does not deploy changes. Login and `clear` use local files without synchronization.
 The host-local registration at
 `~/.config/agent-update/private-sync.json` selects the private repository,
 profile and local identities. Read the
@@ -35,7 +35,8 @@ A second personal computer gets its own registration and selects a shared SSH
 context with its existing local key paths. It does not copy the controller's
 registration or duplicate its SSH file. Inventory-only setup does
 not enroll account credentials. The private profile determines node scope as well
-as role, and explicit synchronization remains required after setup.
+as role. After SSH setup, agent refreshes apply reviewed changes automatically;
+hosts-file and credential writes retain their explicit-request requirement.
 
 SSH destinations and route metadata live once in the version-two inventory.
 Shared option sets and network contexts generate `~/.ssh/moreh_cluster.conf`;
