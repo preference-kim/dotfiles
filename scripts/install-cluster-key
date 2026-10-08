@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 
+sys.dont_write_bytecode = True  # keep the dotfiles checkout clean
 spec = importlib.util.spec_from_file_location('writer', Path(__file__).with_name('replace-managed-file.py'))
 writer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(writer)
