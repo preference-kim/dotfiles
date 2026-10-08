@@ -74,22 +74,28 @@ class ReplaceTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             writer.replace(self.root / 'missing', None, b'content', 0o644)
 
-    def test_cli_creates_generated_include_but_not_personal_entry_point(self):
-        target = self.root / 'moreh_cluster.conf'
-        data = {'path': '~/.ssh/moreh_cluster.conf', 'before': None,
-                'after': 'Host example\n    HostName 192.0.2.10\n', 'mode': '0600'}
+    def run_cli(self, data, target):
         with patch.object(writer.json, 'load', return_value=data), \
              patch.object(writer.Path, 'expanduser', return_value=target), \
              contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(writer.main(), 0)
-        self.assertEqual(target.stat().st_mode & 0o777, 0o600)
-        self.assertEqual(target.read_text(), data['after'])
-        data['path'] = '~/.ssh/config'
-        with patch.object(writer.json, 'load', return_value=data), \
-             patch.object(writer.Path, 'expanduser', return_value=self.root / 'config'), \
-             contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(writer.main(), 1)
-        self.assertFalse((self.root / 'config').exists())
+            return writer.main()
+
+    def test_cli_creates_ssh_files_and_missing_ssh_directory(self):
+        ssh_dir = self.root / 'ssh'
+        data = {'path': '~/.ssh/moreh_cluster.conf', 'before': None,
+                'after': 'Host example\n    HostName 192.0.2.10\n', 'mode': '0600'}
+        self.assertEqual(self.run_cli(data, ssh_dir / 'moreh_cluster.conf'), 0)
+        self.assertEqual(ssh_dir.stat().st_mode & 0o777, 0o700)
+        self.assertEqual((ssh_dir / 'moreh_cluster.conf').stat().st_mode & 0o777, 0o600)
+        data.update(path='~/.ssh/config', after='Host *\nInclude ~/.ssh/moreh_cluster.conf\nHost *\n')
+        self.assertEqual(self.run_cli(data, ssh_dir / 'config'), 0)
+        self.assertEqual((ssh_dir / 'config').read_text(), data['after'])
+        self.assertEqual(self.run_cli(data, ssh_dir / 'config'), 1)
+
+    def test_cli_does_not_create_hosts_file(self):
+        data = {'path': '/etc/hosts', 'before': None, 'after': '127.0.0.1 localhost\n', 'mode': '0644'}
+        self.assertEqual(self.run_cli(data, self.root / 'missing-hosts'), 1)
+        self.assertFalse((self.root / 'missing-hosts').exists())
 
     def test_concurrent_creation_cannot_be_overwritten(self):
         target = self.root / 'new.cfg'

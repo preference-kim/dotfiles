@@ -84,9 +84,13 @@ def main():
         if cloud_config:
             validate_cloud_config(Path(data['path']), data['after'])
         before = data['before'].encode() if data['before'] is not None else None
-        allow_create = cloud_config or data['path'] == '~/.ssh/moreh_cluster.conf'
-        result = replace(Path(data['path']).expanduser(), before,
-                         data['after'].encode(), mode, allow_create=allow_create)
+        ssh_file = data['path'].startswith('~/.ssh/')
+        allow_create = cloud_config or ssh_file
+        path = Path(data['path']).expanduser()
+        if ssh_file and before is None and not path.parent.exists():
+            path.parent.mkdir(mode=0o700)
+            os.chmod(path.parent, 0o700)
+        result = replace(path, before, data['after'].encode(), mode, allow_create=allow_create)
         print(json.dumps({'status': result, 'verified': True}))
         return 0
     except Exception as error:
