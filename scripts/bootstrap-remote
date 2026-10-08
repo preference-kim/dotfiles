@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Bootstrap a development server from a trusted host that holds the fleet keys.
+#   scripts/bootstrap-remote <ssh-destination> [profile]
+# Checks the server, copies the fleet keys, installs age, clones dotfiles and the
+# private repository, and writes the private-sync registration. Run agent-update
+# for the host afterwards. Re-running is safe: clean checkouts are fast-forwarded and
+# the registration keeps its other host-to-profile mappings.
+set -euo pipefail
+
+dest=${1:?usage: bootstrap-remote <ssh-destination> [profile]}
+profile=${2:-}
+[[ -z $profile || $profile =~ ^[A-Za-z0-9._-]+$ ]] || { echo "invalid profile name: $profile" >&2; exit 1; }
+fleet=$HOME/.config/agent-update/fleet
+for f in fleet.agekey private-repo-ed25519 private-repo-ed25519.pub github_known_hosts; do
+    [[ -f $fleet/$f ]] || { echo "missing $fleet/$f: copy the fleet keys from the vault first" >&2; exit 1; }
+done
+recipient=$(age-keygen -y "$fleet/fleet.agekey")
+remote() { ssh -o BatchMode=yes "$dest" "$@"; }
+
+# Check the server before any key leaves this host.
+remote "bash -s -- $(printf '%q' "$recipient")" <<'CHECK'
+set -euo pipefail
+[[ $(uname -s) == Linux ]] || { echo "bootstrap supports Linux servers only" >&2; exit 1; }
+for tool in git python3 tar gzip sha256sum ssh ssh-keygen install; do
+    command -v "$tool" >/dev/null || { echo "bootstrap needs $tool on the server" >&2; exit 1; }
+done
+installed=$HOME/.config/agent-update/fleet/fleet.agekey
+if [[ -f $installed ]]; then
+    keygen=$(command -v age-keygen || echo "$HOME/.local/bin/age-keygen")
+    if [[ -x $keygen && $("$keygen" -y "$installed") != "$1" ]]; then
+        echo "the server holds different fleet keys; rotate them deliberately instead" >&2; exit 1
+    fi
+fi
+CHECK
+
+# The only secret transfer: the fleet key directory, streamed over SSH under the writer lock.
+COPYFILE_DISABLE=1 tar -C "$fleet/.." -cf - fleet | remote '
+    set -e; umask 077
+    state=${XDG_STATE_HOME:-$HOME/.local/state}/agent-update
+    mkdir -p "$state" ~/.config/agent-update
+    mkdir "$state/writer.lock" || { echo "agent-update writer lock is held: $state/writer.lock" >&2; exit 1; }
+    trap "rm -rf \"$state/writer.lock\"" EXIT
+    echo "host=$(hostname) pid=$$ purpose=bootstrap" > "$state/writer.lock/owner"
+    tar -C ~/.config/agent-update -xf -
+    chmod 700 ~/.config/agent-update ~/.config/agent-update/fleet
+    chmod 600 ~/.config/agent-update/fleet/*'
+
+remote "bash -s -- $(printf '%q' "$profile")" <<'REMOTE'
+set -euo pipefail
+explicit_profile=${1:-}
+profile=${explicit_profile:-$(hostname -s)}
+fleet=$HOME/.config/agent-update/fleet
+checkout=$HOME/.config/agent-update/repository
+dotfiles=$HOME/dotfiles
+# The ssh:// form is immune to url.*.insteadOf rules that rewrite git@github.com: to HTTPS.
+private_url=ssh://git@github.com/preference-kim/dotfiles-private.git
+state=${XDG_STATE_HOME:-$HOME/.local/state}/agent-update
+mkdir -p "$state" "$HOME/.local/bin"
+mkdir "$state/writer.lock" || { echo "agent-update writer lock is held: $state/writer.lock" >&2; exit 1; }
+trap 'rm -rf "$state/writer.lock"' EXIT
+echo "host=$(hostname) pid=$$ purpose=bootstrap" > "$state/writer.lock/owner"
+
+# Checksums are the GitHub release asset digests of FiloSottile/age v1.3.2.
+if ! age --version >/dev/null 2>&1 && ! "$HOME/.local/bin/age" --version >/dev/null 2>&1; then
+    case $(uname -m) in
+        x86_64) arch=amd64 sum=cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10 ;;
+        aarch64) arch=arm64 sum=6b8dc4333c53a5a57c9e5834e3a48f92605d7154014cd07269ff3327db5d37f4 ;;
+        *) echo "unsupported architecture for age: $(uname -m)" >&2; exit 1 ;;
+    esac
+    work=$(mktemp -d "$HOME/.local/bin/.age-install.XXXXXX")
+    url=https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-linux-$arch.tar.gz
+    if command -v curl >/dev/null; then curl -fsSL -o "$work/age.tgz" "$url"
+    else python3 -c 'import sys, urllib.request; urllib.request.urlretrieve(sys.argv[1], sys.argv[2])' "$url" "$work/age.tgz"; fi
+    echo "$sum  $work/age.tgz" | sha256sum -c --quiet
+    tar -C "$work" -xzf "$work/age.tgz"
+    install -m 0755 "$work/age/age" "$work/age/age-keygen" "$HOME/.local/bin/"
+    rm -r "$work"
+fi
+
+# Update an existing checkout only when it is this repository's clean root.
+checked_repo() {  # <dir> <origin pattern>
+    local dir=$1 pattern=$2 top origin
+    top=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null) || { echo "$dir exists but is not a Git checkout" >&2; return 1; }
+    [[ $top == "$(cd "$dir" && pwd -P)" ]] || { echo "$dir is inside another checkout ($top)" >&2; return 1; }
+    origin=$(git -C "$dir" remote get-url origin)
+    [[ $origin =~ $pattern ]] || { echo "$dir has unexpected origin $origin" >&2; return 1; }
+    [[ -z $(git -C "$dir" status --porcelain) ]] || { echo "$dir has local changes; resolve them first" >&2; return 1; }
+}
+if [[ -e $dotfiles ]]; then
+    checked_repo "$dotfiles" 'github\.com[:/]preference-kim/dotfiles(\.git)?$'
+    git -C "$dotfiles" pull -q --ff-only
+    git -C "$dotfiles" submodule sync -q --recursive
+    git -C "$dotfiles" submodule update -q --init --recursive
+else
+    git clone -q --recurse-submodules https://github.com/preference-kim/dotfiles.git "$dotfiles"
+fi
+[[ -f $dotfiles/agent-file-sync.local.yaml ]] || printf 'mode: host-global\n' > "$dotfiles/agent-file-sync.local.yaml"
+
+printf -v ssh_cmd 'ssh -F /dev/null -i %q -o IdentitiesOnly=yes -o IdentityAgent=none -o ForwardAgent=no -o StrictHostKeyChecking=yes -o UserKnownHostsFile=%q' \
+    "$fleet/private-repo-ed25519" "$fleet/github_known_hosts"
+if [[ -e $checkout ]]; then
+    checked_repo "$checkout" 'github\.com[:/]preference-kim/dotfiles-private(\.git)?$'
+    git -C "$checkout" remote set-url origin "$private_url"
+else
+    GIT_SSH_COMMAND=$ssh_cmd git clone -q "$private_url" "$checkout"
+fi
+git -C "$checkout" config core.sshCommand "$ssh_cmd"
+GIT_SSH_COMMAND=$ssh_cmd git -C "$checkout" fetch -q origin
+
+python3 - "$profile" "$explicit_profile" "$fleet/fleet.agekey" "$checkout" "$private_url" <<'PY'
+import json, os, socket, getpass, sys, tempfile
+profile, explicit_profile, identity, checkout, private_url = sys.argv[1:]
+path = os.path.expanduser('~/.config/agent-update/private-sync.json')
+try:
+    current = json.load(open(path))
+except FileNotFoundError:
+    current = {}
+host = socket.gethostname()
+mapping = current.get('host_profiles', {})
+mapping[host] = profile
+registration = {
+    'schema_version': 1,
+    'repository_url': private_url,
+    'checkout': checkout,
+    'profile': explicit_profile or current.get('profile', profile),
+    'expected_hostname': current.get('expected_hostname', host),
+    'host_profiles': mapping,
+    'inventory_identity': identity,
+    'hf_identity': identity,
+    'github_identity': identity,
+    'github_account': 'preference-kim',
+    'device_role': 'development-server',
+    'account': getpass.getuser(),
+}
+fd, staging = tempfile.mkstemp(dir=os.path.dirname(path), prefix='.private-sync.')
+with os.fdopen(fd, 'w') as stream:
+    json.dump(registration, stream, indent=2)
+    stream.write('\n')
+os.replace(staging, path)
+print(f'registered {host} as profile {profile}')
+PY
+REMOTE
+echo "bootstrap complete for $dest; run agent-update for this host next"

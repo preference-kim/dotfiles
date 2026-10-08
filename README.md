@@ -13,10 +13,10 @@ Ubuntu setup, and credential-management resources.
 | [agent-guidance/](agent-guidance/) | Conditional guidance for Git, authentication, and Moreh/TT-Metal development. |
 | [skills/](https://github.com/preference-kim/my-claude-skills) | Shared skills from `preference-kim/my-claude-skills`, including `agent-update` and `stop-bullshit`. |
 | [agent-file-sync.example.yaml](agent-file-sync.example.yaml) | Template for choosing where each host exposes instructions and skills. |
-| [zsh/interactive.zsh](zsh/interactive.zsh), [.tmux.conf](.tmux.conf) | Interactive shell and tmux configuration. |
+| [bash/bashrc](bash/bashrc), [zsh/interactive.zsh](zsh/interactive.zsh), [git/config](git/config), [.tmux.conf](.tmux.conf) | Shell, Git and tmux settings that `agent-update` links into each host. |
 | [macos/](macos/README.md) | Pinned D2Coding installation and VS Code/iTerm2 font settings. |
-| [ubuntu/](ubuntu/README.md), [git.conf.sh](git.conf.sh) | Ubuntu setup notes and scripts, and personal Git defaults. |
-| [scripts/](scripts/), [SECRETS.md](SECRETS.md) | Publication guards, credential helpers, and VPN service scripts. |
+| [ubuntu/](ubuntu/README.md) | Ubuntu desktop setup notes and scripts. |
+| [scripts/](scripts/), [SECRETS.md](SECRETS.md) | Server bootstrap, publication guards, credential helpers, and VPN service scripts. |
 | [PUBLICATION.md](PUBLICATION.md) | Public-content boundaries and Git publication controls. |
 
 `CLAUDE.md`, `.claude/CLAUDE.md`, and `.codex/AGENTS.md` are symlinks to the root
@@ -24,11 +24,12 @@ Ubuntu setup, and credential-management resources.
 
 ## Set up shared agent instructions
 
-Git, Python 3, and GitHub SSH access are required for the commands below. The
-`skills` and `stop-bullshit` submodules use SSH URLs.
+Git and Python 3 are required for the commands below. All submodules use public
+HTTPS URLs, so no GitHub key is needed to clone. Maintainers who push over SSH can
+set `remote.origin.pushurl` in their own checkouts.
 
 ```bash
-git clone --recurse-submodules git@github.com:preference-kim/dotfiles.git
+git clone --recurse-submodules https://github.com/preference-kim/dotfiles.git
 cd dotfiles
 python3 scripts/publication-guard.py install
 cp -n agent-file-sync.example.yaml agent-file-sync.local.yaml
@@ -59,6 +60,23 @@ skill manifest. Development-checkout links remain ignored local installation
 metadata. See the [installation rules](https://github.com/preference-kim/my-claude-skills/blob/main/agent-update/references/installation.md)
 for exact paths and conflict handling.
 
+## Bootstrap a development server
+
+Set up a new server from a trusted host that already holds the fleet keys, such as
+a personal computer where `agent-update` has completed. The trusted host must reach
+the server with key-based SSH as your account, and the server needs `git`, `python3`,
+`tar`, `gzip`, `sha256sum`, an SSH client and access to github.com.
+
+```bash
+scripts/bootstrap-remote <ssh-destination>
+```
+
+The script copies the fleet keys, installs `age`, clones this repository and the
+private configuration repository, and registers the host. Then ask the agent on the
+trusted host to run `agent-update` for that server: it adds the server's inventory
+profile if needed and installs the skills, shell and Git settings, SSH configuration
+and cluster key. See [SECRETS.md](SECRETS.md) for the key model.
+
 ## Use and maintain the repository
 
 Edit working principles in [AGENTS.md](AGENTS.md). Keep detailed Moreh/TT-Metal
@@ -66,9 +84,9 @@ procedures in [agent-guidance/tt-metal/](agent-guidance/tt-metal/) with explicit
 loading triggers in `AGENTS.md`. Reusable task workflows belong in the existing
 shared skill that owns them; see the [skill index](https://github.com/preference-kim/my-claude-skills#skills).
 
-Shell, tmux, Git, and Ubuntu setup are separate from agent installation. Review
-the relevant files before applying them to a host: `git.conf.sh` sets personal
-global Git values, and `ubuntu/setup_ubuntu.sh` performs system package changes.
+`agent-update` links the shell, Git and tmux settings additively and keeps personal
+lines in your own startup files. `ubuntu/setup_ubuntu.sh` performs desktop package
+changes; review it before running it on a host.
 Follow [SECRETS.md](SECRETS.md) for the encrypted Hugging Face credential workflow.
 
 Before committing, follow [PUBLICATION.md](PUBLICATION.md). Each repository has

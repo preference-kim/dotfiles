@@ -92,6 +92,17 @@ class ReplaceTests(unittest.TestCase):
         self.assertEqual((ssh_dir / 'config').read_text(), data['after'])
         self.assertEqual(self.run_cli(data, ssh_dir / 'config'), 1)
 
+    def test_cli_installs_cluster_key_pair_with_key_modes(self):
+        ssh_dir = self.root / 'keys'
+        key = {'path': '~/.ssh/moreh_cluster_sunho', 'before': None, 'after': 'synthetic private\n', 'mode': '0600'}
+        pub = {'path': '~/.ssh/moreh_cluster_sunho.pub', 'before': None, 'after': 'synthetic public\n', 'mode': '0644'}
+        self.assertEqual(self.run_cli(key, ssh_dir / 'moreh_cluster_sunho'), 0)
+        self.assertEqual(self.run_cli(pub, ssh_dir / 'moreh_cluster_sunho.pub'), 0)
+        self.assertEqual((ssh_dir / 'moreh_cluster_sunho').stat().st_mode & 0o777, 0o600)
+        self.assertEqual((ssh_dir / 'moreh_cluster_sunho.pub').stat().st_mode & 0o777, 0o644)
+        key['mode'] = '0644'
+        self.assertEqual(self.run_cli(key, ssh_dir / 'other'), 1)
+
     def test_cli_does_not_create_hosts_file(self):
         data = {'path': '/etc/hosts', 'before': None, 'after': '127.0.0.1 localhost\n', 'mode': '0644'}
         self.assertEqual(self.run_cli(data, self.root / 'missing-hosts'), 1)

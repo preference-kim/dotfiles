@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""Install the shared cluster SSH key read from stdin, without putting it in arguments.
+
+Usage: age --decrypt -i <fleet identity> cluster-ssh-key.age | scripts/install-cluster-key [--replace SHA256:...]
+Writes ~/.ssh/moreh_cluster_sunho (0600) and its derived public key (0644) through the
+guarded writer. An existing different key is kept and reported as a local override,
+unless its fingerprint equals the --replace value given for an authorized rotation.
+Prints one JSON line: installed, unchanged, or override with the existing fingerprint.
+"""
+import importlib.util
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+spec = importlib.util.spec_from_file_location('writer', Path(__file__).with_name('replace-managed-file.py'))
+writer = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(writer)
+
+
+def fingerprint(path):
+    result = subprocess.run(['ssh-keygen', '-l', '-f', str(path)], capture_output=True, text=True, check=True)
+    return result.stdout.split()[1]
+
+
+def public_key(private_bytes):
+    with tempfile.TemporaryDirectory() as work:
+        key = Path(work) / 'key'
+        fd = os.open(key, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(private_bytes)
+        result = subprocess.run(['ssh-keygen', '-y', '-f', str(key)], capture_output=True, check=True)
+        return result.stdout
+
+
+def main():
+    os.umask(0o077)
+    replace_fingerprint = sys.argv[2] if sys.argv[1:2] == ['--replace'] and len(sys.argv) == 3 else None
+    private = sys.stdin.buffer.read()
+    if b'PRIVATE KEY' not in private:
+        print(json.dumps({'status': 'failed', 'error_type': 'not a private key'}))
+        return 1
+    ssh_dir = Path.home() / '.ssh'
+    if not ssh_dir.exists():
+        ssh_dir.mkdir(mode=0o700)
+        os.chmod(ssh_dir, 0o700)
+    key, pub = ssh_dir / 'moreh_cluster_sunho', ssh_dir / 'moreh_cluster_sunho.pub'
+    current = key.read_bytes() if key.exists() else None
+    if current is not None and current != private and fingerprint(key) != replace_fingerprint:
+        print(json.dumps({'status': 'override', 'existing_fingerprint': fingerprint(key)}))
+        return 0
+    public = public_key(private)
+    results = [writer.replace(key, current, private, 0o600, allow_create=True),
+               writer.replace(pub, pub.read_bytes() if pub.exists() else None, public, 0o644,
+                              allow_create=True)]
+    status = 'unchanged' if results == ['unchanged', 'unchanged'] else 'installed'
+    print(json.dumps({'status': status, 'fingerprint': fingerprint(key)}))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

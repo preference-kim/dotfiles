@@ -1,0 +1,7 @@
+# Personal Git defaults. ~/.gitconfig includes this file through [include];
+# local settings in ~/.gitconfig after the include still take precedence.
+[user]
+	name = Sunho Kim
+	email = preferencekimm@gmail.com
+[core]
+	editor = vim

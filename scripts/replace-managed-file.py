@@ -76,6 +76,7 @@ def main():
         data = json.load(sys.stdin)
         allowed = {'/etc/hosts': 0o644, '~/.ssh/config': 0o600,
                    '~/.ssh/moreh_cluster.conf': 0o600,
+                   '~/.ssh/moreh_cluster_sunho': 0o600, '~/.ssh/moreh_cluster_sunho.pub': 0o644,
                    '/etc/cloud/cloud.cfg.d/99-moreh-preserve-hosts.cfg': 0o644}
         mode = allowed[data['path']]
         if data['mode'] != format(mode, '04o'):
