@@ -13,7 +13,7 @@ Ubuntu setup, and credential-management resources.
 | [agent-guidance/](agent-guidance/) | Conditional guidance for Git, authentication, and Moreh/TT-Metal development. |
 | [skills/](https://github.com/preference-kim/my-claude-skills) | Shared skills from `preference-kim/my-claude-skills`, including `agent-update` and `stop-bullshit`. |
 | [agent-file-sync.example.yaml](agent-file-sync.example.yaml) | Template for choosing where each host exposes instructions and skills. |
-| [bash/bashrc](bash/bashrc), [zsh/interactive.zsh](zsh/interactive.zsh), [git/config](git/config), [.tmux.conf](.tmux.conf) | Shell, Git and tmux settings that `agent-update` links into each host. |
+| [bash/bashrc](bash/bashrc), [zsh/interactive.zsh](zsh/interactive.zsh), [git/config](git/config), [.tmux.conf](.tmux.conf) | Git and tmux settings that `agent-update` links on every host, and shell settings with the server banner that it links only on development servers. |
 | [macos/](macos/README.md) | Pinned D2Coding installation and VS Code/iTerm2 font settings. |
 | [ubuntu/](ubuntu/README.md) | Ubuntu desktop setup notes and scripts. |
 | [scripts/](scripts/), [SECRETS.md](SECRETS.md) | Server bootstrap, publication guards, credential helpers, and VPN service scripts. |
@@ -84,8 +84,9 @@ procedures in [agent-guidance/tt-metal/](agent-guidance/tt-metal/) with explicit
 loading triggers in `AGENTS.md`. Reusable task workflows belong in the existing
 shared skill that owns them; see the [skill index](https://github.com/preference-kim/my-claude-skills#skills).
 
-`agent-update` links the shell, Git and tmux settings additively and keeps personal
-lines in your own startup files. `ubuntu/setup_ubuntu.sh` performs desktop package
+`agent-update` links the Git and tmux settings on every host and the shell settings
+only on development servers. It adds links and keeps personal lines in your own
+startup files. `ubuntu/setup_ubuntu.sh` performs desktop package
 changes; review it before running it on a host.
 Follow [SECRETS.md](SECRETS.md) for the encrypted Hugging Face credential workflow.
 
