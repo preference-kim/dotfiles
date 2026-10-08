@@ -4,7 +4,7 @@
 # Checks the server, copies the fleet keys, installs age, clones dotfiles and the
 # private repository, and writes the private-sync registration. Run agent-update
 # for the host afterwards. Re-running is safe: clean checkouts are fast-forwarded and
-# the registration keeps its other host-to-profile mappings.
+# the registration keeps its host-to-profile mappings unless a profile is given.
 set -euo pipefail
 
 dest=${1:?usage: bootstrap-remote <ssh-destination> [profile]}
@@ -117,6 +117,8 @@ except FileNotFoundError:
     current = {}
 host = socket.gethostname()
 mapping = current.get('host_profiles', {})
+# An existing registration keeps this host's profile unless one is given explicitly.
+profile = explicit_profile or mapping.get(host) or current.get('profile') or profile
 mapping[host] = profile
 registration = {
     'schema_version': 1,
