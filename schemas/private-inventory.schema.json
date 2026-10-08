@@ -44,6 +44,10 @@
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9.-]*$"
           },
+          "hostname": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          },
           "ip": {
             "type": "string",
             "minLength": 1
