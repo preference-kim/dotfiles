@@ -34,7 +34,7 @@ fi
 CHECK
 
 # The only secret transfer: the fleet key directory, streamed over SSH under the writer lock.
-COPYFILE_DISABLE=1 tar -C "$fleet/.." -cf - fleet | remote '
+COPYFILE_DISABLE=1 tar --no-xattrs -C "$fleet/.." -cf - fleet | remote '
     set -e; umask 077
     state=${XDG_STATE_HOME:-$HOME/.local/state}/agent-update
     mkdir -p "$state" ~/.config/agent-update
