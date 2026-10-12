@@ -20,6 +20,7 @@
     "agent-guidance/claude-model.md",
     "agent-guidance/handoffs.md",
     "agent-guidance/hugging-face-auth.md",
+    "agent-guidance/server-notices.md",
     "agent-guidance/tt-metal/README.md",
     "agent-guidance/tt-metal/debugging.md",
     "agent-guidance/tt-metal/evalscope.md",
