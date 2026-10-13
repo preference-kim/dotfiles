@@ -1,112 +1,92 @@
-## TTNN trace capture, replay, and performance measurement
+# TTNN trace and performance measurement
 
-Read this guide before planning or implementing device-op or model-module
-optimization, designing performance tests, or measuring and profiling TTNN work.
+Read before op/module optimization, performance-test design, TTNN trace
+capture/replay, or measurement and profiling. A delayed device experiment first
+needs [debugging](debugging.md)'s locked triage.
 
-By default, unset `TT_METAL_DEVICE_PROFILER` and run performance measurements
-without Tracy. Device-profiler instrumentation can lower communication-kernel
-performance. Enable it only when device timing or profiling zones are needed for
-diagnosis, in a separate process from the performance baseline.
+For performance baselines, unset `TT_METAL_DEVICE_PROFILER` and run without Tracy.
+Instrumentation can reduce communication-kernel performance. Enable profiling
+only for required timing/zone diagnosis in a separate process.
 
-If a device experiment takes unexpectedly long, immediately follow
-[device debugging and recovery](debugging.md) for tt-triage and hang detection
-before continuing to wait or retry.
+## Capture only traceable dispatch
 
-### Trace capture and replay contract
+Capture warmed-up, nonblocking device-program dispatch with fixed shapes and
+buffer addresses. Capture puts every physical device's system-memory manager in
+bypass mode, so the restriction covers every host CQ on the mesh, not only the
+CQ with the active trace ID.
 
-TT-Metal trace capture records warmed-up, non-blocking device-program dispatch commands with fixed tensor shapes and
-addresses. It does not capture arbitrary host command-queue (CQ) work. Beginning capture puts every physical device's
-system-memory manager into bypass mode, so this restriction applies to all host CQs on the mesh, not only the CQ whose
-trace ID is active.
+Between `begin_trace_capture` and `end_trace_capture`, enqueue only the intended
+device operations. Compile/warm them beforehand and retain replay buffers at
+fixed addresses. Host-CQ work belongs outside capture and the replayed stream:
+transfers, buffer/core reads or writes, `.cpu()`/`to_torch()`, finish/synchronization,
+events, profiler drains, and equivalent work hidden in helpers/callbacks.
 
-- Between `begin_trace_capture` and `end_trace_capture`, enqueue only the device operations intended for the trace.
-  Compile and warm them up before capture, and keep their device buffers at the addresses the replay will use.
-- Do not perform H2D or D2H transfers, buffer/core reads or writes, `.cpu()`/`to_torch()` conversion, device or CQ
-  synchronization/finish, event record/wait, profiler drains, tensor dumps, or any helper that performs equivalent host-CQ
-  work inside capture. Do not hide such work in an op wrapper or callback expected to run as part of trace replay.
-- Replay with `execute_trace(..., blocking=False)`. The trace lifecycle calls themselves necessarily enqueue trace-control
-  work; surrounding input writes, output reads, events, and synchronization must be separate CQ commands outside the
-  captured/replayed command stream. They may be ordered before or after the replay on the same CQ, or coordinated across
-  CQs with events outside capture.
-- When debugging a model built on `models/common_moreh`, use the shared
-  `models/common_moreh/tensor_dump.py` infrastructure instead of adding an ad hoc dump path. Publish a stable semantic
-  point with `capture_tensor(...)` and use the existing `TensorDumpMixin`/generator integration. It captures a
-  `ttnn.clone` into a persistent device buffer, retains that handle with the trace, and performs host conversion and
-  persistence only after replay. Do not add direct `to_torch`, `.cpu()`, synchronization, or file I/O to model code.
-- For a path that cannot use this infrastructure, preserve the same ownership boundary: preallocate a persistent device
-  debug tensor before capture and use a warmed-up, traceable device operation to write it. Read it back only after
-  `end_trace_capture`, or enqueue the read after `execute_trace` as a following CQ command, then synchronize outside the
-  trace. Complete the host snapshot before another replay can overwrite the retained buffer.
+Use `execute_trace(..., blocking=False)`. Trace lifecycle calls enqueue their
+required control work; surrounding input/output, events, and synchronization
+remain separate CQ commands. Order them before/after replay on the same CQ or
+coordinate CQs with events outside capture.
 
-### Authoritative steady-state latency for an individual op
+For `models/common_moreh` tensor debugging, use `tensor_dump.py` with semantic
+`capture_tensor(...)` points and its `TensorDumpMixin`/generator integration.
+It clones into a persistent device buffer retained with the trace; host conversion
+and persistence happen after replay. Keep direct conversion, synchronization,
+and file I/O out of model code.
 
-For an individual TTNN op repeatedly executed with fixed shapes and buffer addresses, use amortized trace-replay wall
-time as the authoritative steady-state latency. This result represents warmed-up execution with dispatch overhead
-amortized, as in model trace execution. It is not cold-start latency or the end-to-end latency of an ordinary Python API
-call.
+Elsewhere, preallocate persistent debug tensors, write with warmed-up traceable
+device ops, and read only after capture or as a CQ command following replay.
+Synchronize outside the trace and finish the host snapshot before another replay
+can overwrite the retained buffer.
 
-Warmup excludes compilation and program-cache preparation from timing. Capturing
-multiple op executions amortizes the cost of submitting a trace; enqueueing
-multiple nonblocking replays avoids a host/device wait after each replay and
-amortizes the timer and final synchronization costs. This approximates the
-sustained device execution of a traced model while retaining completion time in
-the measurement.
+## Measure steady-state op latency
 
-Measure it in a fresh process as follows:
+For fixed-shape, fixed-address repeated TTNN ops, authoritative steady-state
+latency is amortized trace-replay wall time. It includes completion while
+amortizing dispatch and host timing overhead, and excludes compilation. It does
+not represent cold start or ordinary Python API end-to-end latency.
 
-1. Unset `TT_METAL_DEVICE_PROFILER`, then execute the op at least once to complete JIT compilation
-   and program-cache preparation.
-2. Begin trace capture and enqueue the same op `N` times, where `N > 10`, using the shapes and device-buffer addresses that
-   replay will retain.
-3. End capture, warm up replay, then synchronize the device before timing.
-4. Record the start time.
-5. Replay the captured trace `M` times with `blocking=False`, where `M > 10`. Do not synchronize between replays.
-6. After the final replay, synchronize the device once and record the end time.
-7. Compute `time_per_op = elapsed_time / (N * M)`.
+Use a fresh process with the baseline settings above.
 
-Use a monotonic timer. For stateful operations, define a valid replay and state-reset protocol.
-Retain the input and output buffers through every replay. After queued work completes, release the trace before its buffers, including on failure.
-If execution hangs, follow the locked recovery protocol before releasing resources.
+1. Execute the op at least once to complete JIT/program-cache preparation.
+2. Capture `N > 10` executions with replay's shapes and buffer addresses.
+3. End capture, warm up replay, and synchronize before starting a monotonic timer.
+4. Enqueue `M > 10` replays with `blocking=False`, without intervening synchronization.
+5. Synchronize once after the final replay, stop timing, and compute
+   `time_per_op = elapsed_time / (N * M)`.
 
-Profiler-enabled wall time is not an authoritative latency result. A host wall-clock
-measurement without trace replay includes variable dispatch, Python, filesystem,
-and other host overhead; do not interpret it as device-op performance.
+Define valid replay/state-reset behavior for stateful ops. Retain inputs and
+outputs throughout queued work. Release the trace before its buffers after work
+completes, including on failure; a hang needs locked recovery first.
 
-Report `N`, `M`, profiler state, replay blocking setting, every synchronization position, input and output shapes, memory
-configurations, and device topology with each result. Also record any program configuration or buffer-layout condition
-needed to reproduce the measurement.
+Report `N`, `M`, profiler state, blocking setting, every synchronization position,
+input/output shapes, memory and program configuration, buffer layout, and device
+topology needed to reproduce the result. Profiler-enabled wall time is not this
+latency. Ordinary non-trace host timing includes variable dispatch, Python,
+filesystem, and other overhead and does not establish device-op performance.
 
-### Tracy attribution
+## Attribute with Tracy
 
-Use Tracy only when per-op or per-kernel attribution is required. Run it in a separate fresh process with
-`TT_METAL_DEVICE_PROFILER=1`; do not reuse that process's wall time as the trace-replay latency result. Keep inputs,
-shapes, program configurations, caller-owned buffers, warmup, and replay structure matched between the latency and
-attribution processes. Runtime profiler options are process-global and read at startup, so changing the environment after
-TT-Metal initialization does not establish a clean comparison.
+Use a separate fresh process with `TT_METAL_DEVICE_PROFILER=1` only when per-op
+or per-kernel attribution is needed. Match the baseline's inputs, shapes,
+program configuration, caller-owned buffers, warmup, and replay structure.
+Profiler options are process-global at startup; changing the environment after
+initialization does not create a clean comparison.
 
-Run `python -m tracy -r -p -v main.py`. Read the generated CSV path from its output.
-Parse by header name with `csv.DictReader`, never by fixed column index. Require the relevant columns:
+Run `python -m tracy -r -p -v main.py` and use the CSV path in its output.
+Parse with `csv.DictReader` by header name, requiring `OP CODE`, `OP TYPE`,
+`GLOBAL CALL COUNT`, `DEVICE ID`, and `DEVICE KERNEL DURATION [ns]`.
+Report missing headers; `DEVICE FW DURATION [ns]` is a separate metric.
 
-- `OP CODE`, `OP TYPE`, `GLOBAL CALL COUNT`, `DEVICE ID`
-- `DEVICE KERNEL DURATION [ns]`
+Filter device ID `0` or empty only for an explicitly selected single-device
+view. Otherwise retain/identify all relevant devices. An empty ID does not prove
+a device-kernel event. Kernel duration excludes firmware and can undercount op
+time; firmware duration can overcount due to inter-core start/completion skew.
+Use both for diagnosis, not authoritative latency.
 
-`DEVICE FW DURATION [ns]` is a different metric. Report missing headers instead of substituting another duration.
-Filter device ID `0` or empty only for an explicitly selected single-device view.
-For multi-device analysis, retain and identify every relevant device. A blank device ID does not prove a device-kernel event.
+## Keep one profiled mesh lifetime
 
-Tracy device-kernel duration can be smaller than actual op execution time because it excludes firmware time. Device
-firmware duration can instead overestimate execution when it spans inter-core start or completion skew. Use both only for
-attribution and diagnosis, never as authoritative op latency.
-
-### Device lifetime during profiling
-
-Closing a mesh while device profiling is active and then recreating it can hang
-the next device initialization. A device-profiler process must use one mesh-device
-lifetime. Open the mesh device before profiled work and close it only after every
-profiled case and profiler drain in that process completes. Never close and reopen
-a mesh device in the same profiler-enabled process.
-
-Cases may share that lifetime when their device configuration permits it. A
-function-scoped pytest mesh fixture closes the device between cases; if cases
-require independent fixtures or device configurations, expose separately
-invocable test nodes and run each exact parameterized node in a fresh Tracy process.
+A profiler-enabled process must open one mesh and close it only after all cases
+and profiler drains finish. Closing then reopening can hang initialization.
+Cases can share that lifetime only with compatible device configuration.
+For independent configurations or function-scoped pytest fixtures, expose
+separately invocable nodes and run each exact parameterized node in a fresh
+Tracy process.

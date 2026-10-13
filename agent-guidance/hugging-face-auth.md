@@ -8,7 +8,8 @@ If the stored credential is missing or invalid, report the authentication
 prerequisite. Synchronize it only when the user explicitly requests HF credential
 setup, repair or synchronization; daily and generic agent refreshes do not fetch
 or apply private credentials. For that authorized action, read the canonical
-[private synchronization protocol](../skills/agent-update/references/private-sync.md).
+[HF synchronization](../skills/agent-update/references/private-hf.md),
+which requires the common private synchronization protocol.
 Fetch and verify the approved HF payload with the registered host's own access
 and age identity. Pipe decrypted bytes directly to
 `<dotfiles>/scripts/install-hf-credential`; never pass the token in argv, log it,
