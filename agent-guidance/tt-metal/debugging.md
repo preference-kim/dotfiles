@@ -13,7 +13,7 @@ before continuing to wait or retry; elapsed time alone does not establish a hang
 
 ## Triage a stalled workload
 
-If no JIT compilation is running (no `cc1plus` process — only `python`) and there has been no output for more than a minute during an already-running TT device workload, assume the device may be hung. This rule does **not** apply while the process is still in device/runtime initialization (for example importing TTNN, opening devices, initializing Fabric, topology discovery, hugepage setup, or first-time test collection that probes devices). During initialization, wait for a clear runtime failure, a command timeout, or explicit evidence that initialization has stopped progressing before treating it as a device hang.
+If an already-running TT workload produces no output for more than a minute, inspect the active toolchain processes for ongoing JIT compilation. For GCC, this includes `cc1plus`. If compilation is absent, investigate a possible device hang. This is a diagnostic threshold, not proof of a hang. This rule does **not** apply while the process is still in device/runtime initialization (for example importing TTNN, opening devices, initializing Fabric, topology discovery, hugepage setup, or first-time test collection that probes devices). During initialization, wait for a clear runtime failure, a command timeout, or explicit evidence that initialization has stopped progressing before treating it as a device hang.
 
 For a suspected workload hang, keep the existing device lock and collect live
 state before terminating the workload or resetting the device. From the active

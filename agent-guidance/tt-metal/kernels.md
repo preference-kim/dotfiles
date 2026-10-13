@@ -1,92 +1,54 @@
-## Heehoon's tt-metal Kernel Guide
+# TT kernel guide
 
-These rules are intentionally stricter than necessary to reduce mistakes by AI agents.
+Read before writing or reviewing TT ops/kernels. Preserve these conservative Moreh conventions while checking the active checkout's APIs; version-specific names are not substitutes for source inspection.
 
-### General kernel rules
+## API, arguments, and allocation
 
-- When writing or modifying TT data-movement kernels, use the Device 2.0 APIs from `tt_metal/hw/inc/api/` rather than legacy data-movement APIs. Follow the [Device 2.0 Data Movement API Migration Guide](https://github.com/tenstorrent/tt-metal/blob/main/docs/source/tt-metalium/tt_metal/apis/kernel_apis/data_movement/device_api_migration_guide.md). Legacy API names elsewhere in these instructions express required behavior only; use their Device 2.0 equivalents in code.
+- Write/modify data-movement kernels with Device 2.0 APIs under `tt_metal/hw/inc/api/`, following the checkout's `docs/source/tt-metalium/tt_metal/apis/kernel_apis/data_movement/device_api_migration_guide.md`. Use `Noc`, `CircularBuffer`, and endpoint APIs rather than copying legacy examples.
 - Never use `invalidate_l1_cache()`.
-- Any kernel that issues asynchronous NoC atomics, including semaphore increments, must call `noc_async_atomic_barrier()` after those operations and before the kernel ends.
-- Any kernel that issues asynchronous NoC writes must call `noc_async_write_barrier()` after those operations and before the kernel ends.
-- Align every NoC transaction to 32 bytes:
-  - `src_addr % 32 == dst_addr % 32` is a hard requirement.
-  - `size % 32 == 0` is a strong default, not a hard requirement; some operations intentionally use transaction sizes that are not divisible by 32.
-- Semaphores are automatically initialized to their configured initial value at the start of the kernel. Do not set them again explicitly; doing so can create races, for example when another core has already sent an increment that then gets overwritten by a set.
-- Calling `get_semaphore(id)` for a semaphore that is not allocated on the current core (only on other cores) is wrong.
-- Be careful when accessing another core's circular buffer over NoC, especially when that CB is not allocated on the current core. TODO: clarify the correct way to obtain a remote core's CB address.
-- For `NocUnicastAtomicIncFusedCommandHeader`, `flush = true` is a performance optimization that waits only for write data to depart before sending the atomic increment. It does not replace the required `noc_async_write_barrier()` before the kernel ends; the atomic also requires `noc_async_atomic_barrier()` before the kernel ends.
-- `transpose_wh_dest` is face-wise transpose by default.
-- With `matmul_block`, even when `transpose = true`, the B segment (`ct_dim * kt_dim`) is expected to occupy continuous CB slots; the A segment may use `kt_dim` stride.
-- `pack_tile` and `pack_tile_block` auto-advance the output tile index by default.
-  - For an arbitrary `output_tile_index`, pass `out_of_order_output = true` to `pack_tile`.
-- Choose argument types as follows:
-  - If values differ across cores, use runtime args.
-  - If values are common across cores but can differ run-to-run (for example, tensor addresses), use common runtime args.
-  - Otherwise, use compile-time args.
-- Do not use a custom `compute_program_hash`. If possible, do not define one; rely on the default hash.
+- Use per-core runtime args for values differing across cores, common runtime args for values shared across cores but varying between runs (including tensor addresses), and compile-time args otherwise.
+- Rely on the default program hash; do not define a custom `compute_program_hash`.
+- Use `TensorAccessor` for actual tensors. Prefer `CircularBufferConfig` + `CreateCircularBuffer` for program-local L1 scratch/workspace, accessed by CB index/base pointer; these remain supported public APIs. Program-local CB storage does **not** persist across programs. Cross-program persistence needs an explicitly managed allocation/lifetime; use `CreateBuffer(config)` with `config.buffer_type = BufferType::L1` only for an intentional tensor-like/runtime buffer with a verified nearby pattern.
+- CB scratch is a Moreh preference, not the only valid allocation API. The experimental Metal 2.0 host API also supports `ScratchpadSpec` + device `Scratchpad<T>` for program-scope raw L1 memory. Use that alternative only with the matching host API/binding/lifetime model, not as a drop-in for existing CB-based programs; provide synchronization explicitly.
+- For manually managed non-tensor scratch, use raw address math from its CB/scratchpad base and explicit NoC coordinates, not `TensorAccessor`/`InterleavedAddrGen` bank mapping. A local CB pointer is not evidence of another core's CB address; verify the remote allocation and address.
+- Derive dimensions, tile sizes, alignment, and header sizes from existing constants/helpers rather than magic numbers.
 
-### Multicast
+## NoC transactions and signaling
 
-For multicast, use this pattern:
+- After asynchronous writes, drain the applicable NoC with `Noc::async_write_barrier()` before kernel exit. After asynchronous atomics, including semaphore increments, use `Noc::async_atomic_barrier()`. Both barriers are required when both types were issued. These drain transactions issued by the current core on that NoC; they do not by themselves establish end-to-end completion of remote Fabric forwarding. Use the Fabric protocol's completion/acknowledgment mechanism when remote completion is required.
+- Use ordered data-write-then-semaphore signaling (including multicast) without an unnecessary intervening barrier. Ordering depends on the same NoC and VC and the API's write/atomic ordering contract; verify these before relying on it. Different NoCs/VCs need an explicit ordering design, not this assumption. See the checkout's `data_movement/ordering.rst`.
+- A fused `NocUnicastAtomicIncFusedCommandHeader` with `flush = true` waits for write data to depart before the atomic; it does not replace either final completion barrier.
+- Keep the conservative 32-byte aligned-chunk default for ordinary data transfers, but derive the actual requirement from architecture, memory type, and direction. Matching source/destination offsets modulo the required alignment is essential: modulo 32 for Wormhole DRAM reads, modulo 64 for Blackhole DRAM reads. Prefer aligned chunks; a modulo-32 check alone is not portable. Semaphore/inline APIs have their own contracts.
+- Prefer transfer sizes divisible by the required alignment, but intentional smaller transactions may be valid. For scalar fields, avoid tiny unaligned NoC transactions: read/write an aligned chunk into scratch and index locally. A 4-byte scalar read can silently access the wrong data. Do not overwrite unrelated fields when writing the chunk back.
+- Verify logical/virtual/physical coordinate mapping and NoC0/NoC1 routing in the active API; do not infer remote coordinates from local ones.
 
-```cpp
-noc_async_write_multicast(...);
-noc_semaphore_set_multicast(...);
-noc_async_write_barrier();
-```
+## Semaphores and Fabric
 
-The write operations are ordered, so do not put a barrier between the data write and the semaphore write.
+- Program-local semaphores created with `CreateSemaphore` are initialized by dispatch for the program; do not redundantly set them at kernel entry and overwrite another core's increment. Global semaphore buffers instead need a deliberate creation/reset/reuse protocol; do not assume per-kernel initialization.
+- Do not call `get_semaphore(id)` (or its Device 2.0 equivalent) for a semaphore allocated only on another core.
+- Allocate/pass local and global semaphores on every participating core, including Fabric/link workers that read or increment them. A semaphore only on logical `(0,0)` is insufficient for a barrier executing on a separate Fabric row/column.
+- Fabric packet-header CB pages must use exactly `tt::tt_fabric::get_tt_fabric_packet_header_size_bytes()`. Allocate enough pages for all simultaneously live headers; one suffices if one header/route is live at a time. `RawUInt32` is conventional; `UInt32` can work with exact page sizing. Before blaming dtype for a hang, isolate semaphore scope and header page/slot sizing.
 
-TODO: document virtual coordinates, physical coordinates, and the `noc0`/`noc1` reversal rules.
+## Circular buffers
 
-### Unit tests
+- Never call push or pop for the same CB from multiple threads; their pointers are not synchronized across threads.
+- Reserve/wait are counter-only credit checks: they do not advance pointers or promise physical contiguity. Counts up to total capacity may logically cross the wrap boundary. Repeated waits without a pop use cumulative counts.
+- Push/pop advance physical pointers; a single call may reach the limit exactly and wrap, but must not pass it. Split accesses and pointer-advancing operations into boundary-safe chunks. Push/pop amounts over a complete cycle must sum exactly to CB size.
+- A cross-boundary reserve/wait therefore does not authorize one contiguous memory access across the physical end.
 
-Follow the [test organization and naming conventions](README.md#test-organization)
-for test placement and filenames.
+## Compute
 
-When adding an op, implement these tests by default:
+- Use `tile_regs_acquire`, `tile_regs_commit`, `tile_regs_wait`, and `tile_regs_release`, never `acquire_dst`/`release_dst`.
+- Call `compute_kernel_hw_startup(...)` **exactly once, before any other compute API**, with CB IDs and source ordering matching the first operation. Use default `SrcOrder::Regular` except for matmul, which needs `compute_kernel_hw_startup<SrcOrder::Reverse>(in0, in1, out)` with natural operand order. Never rerun startup when switching operations; explicitly reconfigure/init each subsequent operation family instead of inheriting unpack/math/pack state.
+- Before FPU copy, reconfigure SrcA/input formats and call the matching copy init, such as `reconfig_data_format_srca(...)` followed by `copy_tile_to_dst_init_short(...)`. Before SFPU operations, use the matching init (for example `exp_tile_init` before `exp_tile`). Check current signatures/templates.
+- Before packing, call `pack_reconfig_data_format(...)` for the destination CB. For tilize, use matching `tilize_init`/`tilize_block` and `tilize_uninit` before switching operations, with the correct formats and packer configuration.
+- For untilize, prefer `pack_untilize_init` + `pack_untilize_block`, or `pack_untilize_dest_init` + `pack_untilize_dest` for data already in DST. Run `pack_untilize_uninit` before initializing another operation; check current signatures/templates. Treat legacy untilize APIs as deprecated. Verify the active checkout before choosing the replacement and cleanup calls.
+- `pack_tile` and `pack_block` auto-advance output positions. For an arbitrary tile index, use `pack_tile<true>` (`out_of_order_output = true`). `pack_tile_block` is a deprecated alias; prefer `pack_block`.
+- Use `transpose_dest_init`/`transpose_dest`, not deprecated `transpose_wh_dest` names. On Wormhole/Blackhole, default `transpose_of_faces=true` performs a full tile transpose; `false` selects inner-face-only transpose. Do not assume the default is face-wise-only or generalize this flag behavior to other architectures without checking their implementation.
+- On ordinary Wormhole/Blackhole `matmul_block` paths, preserve contiguous B segments (`ct_dim * kt_dim`) even when transpose is enabled; A may use `kt_dim` stride. Transposing tiles in B does not provide arbitrary CB-layout strides. Verify the active implementation when changing layouts; Quasar currently rejects nonzero `transpose` (and nonzero `idst`) in `matmul_block`.
 
-- `op_correctness`
-- `op_performance`: follow the authoritative steady-state trace-replay measurement contract in [profiling](profiling.md).
+## Tests
 
-The `op_breakdown` test and its L1 debug tensor interface are optional; implement them only when explicitly instructed. When requested, include an interleaved L1 debug tensor shaped like `[num_cores, num_slots]`; write values as `debug_l1[slot] = x`. Keep this simple; do not use a fancy `TensorAccessor` here.
-
-### Circular buffers
-
-- Never call `cb_push_back` or `cb_pop_front` from multiple threads. CB write/read pointers are not synchronized across threads (see the comment in `cb_api.h`).
-- `cb_reserve_back` and `cb_wait_front` are counter-only blocking waits; they do not advance CB pointers or record a physical span. Their requested page count may logically cross the CB wrap boundary, up to the CB's total capacity. Repeated `cb_wait_front` calls without a paired pop use cumulative counts.
-- `cb_push_back` and `cb_pop_front` advance the physical write/read pointers. A single call may reach the physical CB limit exactly and wrap, but must not advance past it. Split pointer-advancing operations at the boundary, and ensure push/pop amounts over one complete cycle sum exactly to the CB size.
-- A cross-boundary reserve/wait proves only free/available page credit; it does not make the underlying pages physically contiguous. Split actual memory accesses and their corresponding push/pop operations into boundary-safe chunks.
-
-### Accessing tensors
-
-- Almost always use `TensorAccessor`.
-
-### Compute kernels
-
-- Never use `acquire_dst` or `release_dst`.
-- Use `tile_regs_acquire`, `tile_regs_commit`, `tile_regs_wait`, and `tile_regs_release`.
-- For FPU ops, always precede the operation with reconfiguration and init, for example:
-
-```cpp
-reconfig_data_format(cb_m_local, cb_m_local);
-copy_tile_to_dst_init_short(cb_m_local);
-copy_tile(cb_m_local, 0, 0);
-```
-
-- For SFPU ops, always precede the operation with init, for example:
-
-```cpp
-exp_tile_init</*approx=*/false, scale_fp32>();
-exp_tile</*approx=*/false, /*scale_en=*/true>(0, static_cast<int>(VectorMode::RC), scale_bf16);
-```
-
-### Additional kernel constraints
-
-- In TT dataflow kernels, avoid tiny unaligned NOC reads/writes for scalar fields in interleaved tensors or L1 buffers. Read/write an aligned 32-byte (or larger aligned) chunk into scratch, then index the scalar locally. For example, reading one int32 from `TensorAccessor::get_noc_addr(page, elem * sizeof(int32_t))` or an `InterleavedAddrGen` with a 4-byte size can silently fetch the wrong value on device; align the offset down and transfer at least 32 bytes.
-- In TT ops, allocate internal L1 scratch/persistent workspace as circular buffers (`CircularBufferConfig` + `CreateCircularBuffer`) and pass/access them by CB index with `get_read_ptr`/`get_write_ptr`; do not allocate scratch L1 with `CreateBuffer(BufferType::L1)` unless you are intentionally creating a real tensor-like/runtime buffer and have verified the pattern in nearby ops. For manually managed L1 storage that is not a tensor, do raw address math from the CB base and explicit NOC coordinates; do not use `TensorAccessor`/`InterleavedAddrGen` on non-tensor scratch, because page/bank mapping can return garbage.
-- In TT Fabric dataflow kernels, allocate packet-header CBs with exact fabric header page size `tt::tt_fabric::get_tt_fabric_packet_header_size_bytes()` (96 bytes on the current 2D torus route-buffer-size-35 path) and enough pages for every simultaneously live header. One page is sufficient when a core uses only one header/route at a time, such as a lane choosing either north or south; allocate multiple pages only when the same core keeps multiple headers live concurrently. `RawUInt32` matches common fabric examples, but `UInt32` also works when the page size is exact; do not infer a fabric hang is caused by dtype before isolating semaphore scope and header page/slot sizing.
-- For TT Fabric barriers or fabric atomics that use global semaphores, create/pass the semaphore on every core that will read or increment it, including fabric/link-worker cores. Do not create a global semaphore only on logical `(0,0)` when the barrier runs on a separate fabric core row/column. For local semaphores from `CreateSemaphore`, use a `CoreRangeSet` that includes all participating cores.
-- In TT dataflow kernels, when using NoC writes followed by a semaphore signal (unicast or multicast), issue the data writes first and then the semaphore increment/set without putting a barrier between them. Before the kernel ends, drain every issued operation with the applicable barrier: `noc_async_write_barrier()` for writes and `noc_async_atomic_barrier()` for atomics such as semaphore increments. A fused-command `flush` does not replace the final write barrier.
-- In TT compute kernels, initialize and reconfigure explicitly before every operation family. Put `compute_kernel_hw_startup(...)` near the start as the whole-kernel init. Before `copy_tile`, reconfigure SrcA for the input CB and run the copy init (for example `reconfig_data_format_srca(...)`/`reconfig_data_format(...)` then `copy_tile_to_dst_init_short...`). Before `pack_tile`, call `pack_reconfig_data_format(...)` for the destination CB. Before `tilize_block`/`untilize_block`, run the matching `tilize_init...`/`untilize_init...` with the correct data formats and packer config; do not assume a previous op left unpack/math/pack state valid.
-- Instead of magic numbers, derive them from existing constants such as ttnn.TILE_SIZE and the ones in tt-metalium/constants.hpp if possible.
+- New ops need `op_correctness` and trace-replay `op_performance` tests by default; follow [profiling](profiling.md) for measurement.
+- Add `op_breakdown` and its L1 debug interface only when explicitly requested. Use a simple interleaved L1 debug tensor `[num_cores, num_slots]`, with local writes like `debug_l1[slot] = x`; avoid an elaborate TensorAccessor abstraction for this interface.
+- Follow the [basic guide](README.md) before running tests. Use its test placement and naming conventions.

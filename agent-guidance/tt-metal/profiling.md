@@ -58,11 +58,15 @@ Measure it in a fresh process as follows:
    and program-cache preparation.
 2. Begin trace capture and enqueue the same op `N` times, where `N > 10`, using the shapes and device-buffer addresses that
    replay will retain.
-3. End capture, then synchronize the device before timing.
+3. End capture, warm up replay, then synchronize the device before timing.
 4. Record the start time.
 5. Replay the captured trace `M` times with `blocking=False`, where `M > 10`. Do not synchronize between replays.
 6. After the final replay, synchronize the device once and record the end time.
 7. Compute `time_per_op = elapsed_time / (N * M)`.
+
+Use a monotonic timer. For stateful operations, define a valid replay and state-reset protocol.
+Retain the input and output buffers through every replay. After queued work completes, release the trace before its buffers, including on failure.
+If execution hangs, follow the locked recovery protocol before releasing resources.
 
 Profiler-enabled wall time is not an authoritative latency result. A host wall-clock
 measurement without trace replay includes variable dispatch, Python, filesystem,
@@ -80,10 +84,15 @@ shapes, program configurations, caller-owned buffers, warmup, and replay structu
 attribution processes. Runtime profiler options are process-global and read at startup, so changing the environment after
 TT-Metal initialization does not establish a clean comparison.
 
-Run `python -m tracy -r -p -v main.py`; Tracy prints the generated CSV path on completion. Relevant CSV columns are index
-0 = OP CODE, 1 = OP TYPE, 2 = GLOBAL CALL COUNT, 3 = DEVICE ID, and 18 = DEVICE KERNEL DURATION [ns]. When analyzing,
-filter to rows whose DEVICE ID is `0` or empty and extract those five columns. Write a parsing script as needed rather than
-using a fixed one.
+Run `python -m tracy -r -p -v main.py`. Read the generated CSV path from its output.
+Parse by header name with `csv.DictReader`, never by fixed column index. Require the relevant columns:
+
+- `OP CODE`, `OP TYPE`, `GLOBAL CALL COUNT`, `DEVICE ID`
+- `DEVICE KERNEL DURATION [ns]`
+
+`DEVICE FW DURATION [ns]` is a different metric. Report missing headers instead of substituting another duration.
+Filter device ID `0` or empty only for an explicitly selected single-device view.
+For multi-device analysis, retain and identify every relevant device. A blank device ID does not prove a device-kernel event.
 
 Tracy device-kernel duration can be smaller than actual op execution time because it excludes firmware time. Device
 firmware duration can instead overestimate execution when it spans inter-core start or completion skew. Use both only for

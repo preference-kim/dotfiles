@@ -126,7 +126,7 @@ every linked document.
 | Hugging Face authentication or Hub operations | `agent-guidance/hugging-face-auth.md` |
 | Starting a Claude subprocess or checking its authentication | `agent-guidance/claude-auth.md`; for reasoning/review also `agent-guidance/claude-model.md` |
 | Planning or starting shared-server builds, tests, jobs, cluster allocation, or server maintenance | `agent-guidance/server-notices.md`; check current operational notices before selecting resources or acting |
-| TT-Metal build, import, test, or workload; touching a TT device; MPI launches or shared writable caches | `agent-guidance/tt-metal/README.md` |
+| TT-Metal build, import, test, or workload; TT devices on a Guardian-protected host in any repository; MPI launches or shared writable caches | `agent-guidance/tt-metal/README.md` |
 | A suspected TT device anomaly requires minimal reproduction, host/device/unit localization, upstream verification, or submission artifacts | `skills/tt-device-investigation/SKILL.md`; not routine op correctness, performance tuning, or standalone hang/reset recovery |
 | A TT device experiment takes unexpectedly long; diagnosing device hangs, initialization failures, or unsuccessful resets | `agent-guidance/tt-metal/debugging.md`; also the basic guide before device work |
 | Editing or reviewing TT-Metal kernels or ops | `agent-guidance/tt-metal/kernels.md`; read the basic guide before execution |
