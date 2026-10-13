@@ -34,14 +34,13 @@ Galaxy reset can legitimately take several minutes and may produce no output whi
 
 Treat an unusually slow reset, or a stall/failure while opening devices after a successful reset, as a device/setup failure on its first occurrence rather than evidence of a branch regression. Briefly report the observed stage and impact, stop any live process before resetting, then reset and retry once under the normal lock protocol unless the task plan or user specifies a different retry budget. Do not count the failed setup attempt as a measurement. Attribute the failure to the branch only when it reproduces from a known-good device state or other evidence connects it to the code; if the device/setup failure repeats, report it as an infrastructure blocker and preserve the relevant logs.
 
-Start with the Galaxy systems selected for the workload. If that reset is
-unsuccessful on a four-Galaxy cluster, confirm that all four nodes have no live
-UMD/device mappings, acquire the cluster-wide whole lock, and reset all four
-Galaxy systems together. If a narrower lock is held, release it before waiting
-for the cluster-wide whole lock; if the cluster-wide whole lock is already
-held, keep it while expanding the reset to all four systems. This full-cluster
-reset reinitializes Ethernet links to unused neighboring nodes that can
-otherwise remain incomplete. If any member of the full-cluster reset exceeds
-five minutes, end that reset attempt while retaining the whole lock and run
-the full-cluster reset again. Start the workload after the required device
-counts and Ethernet endpoints are healthy.
+If a narrower reset fails, use a full-cluster reset only when all four hosts
+are authorized for the job. Release a narrower lock before waiting for the
+cluster-wide whole lock. Keep that lock if already held. With all target locks
+held, confirm no target has live UMD/device mappings before resetting.
+A full-cluster reset reinitializes Ethernet links to unused neighbors that can
+otherwise remain incomplete. Apply the [execution-location rule](../../AGENTS.md#execution-location) to every reset.
+
+End a failed reset attempt before retrying within the budget above.
+Retain the full-cluster lock during recovery. Start the workload after the
+required device counts and Ethernet endpoints are healthy.

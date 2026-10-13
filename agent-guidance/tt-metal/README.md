@@ -73,7 +73,7 @@ Our tt-metal safety policy is to reset after lock acquisition, before the worklo
 - Supported Wormhole Galaxy (full 32-device system): `moreh-smi -glx_reset`. Budget for bounded reset retries and check the installed version's behavior.
 - Other verified supported Wormhole hosts: `moreh-smi -r`, with **no device index by our safety policy**. Indexed resets are supported by the CLI but are not the policy for these hosts. No-index reset targets all enumerated mappings; `TT_VISIBLE_DEVICES` does not restrict it.
 - Do not assume a Wormhole-specific reset implementation supports Blackhole or another architecture. Verify a supported reset path before proceeding; do not guess a command or silently substitute `tt-smi` for tt-metal.
-- For an authorized four-Galaxy job, prefer resetting all four systems even if the workload uses two. Hold every whole-host lock and follow the current-host execution rule. Follow [recovery](debugging.md) for failed attempts.
+- Choose the initial reset scope from the authorized job's hosts. If all four Galaxy systems are authorized and locked, prefer resetting all four, even for a two-system workload. Otherwise reset the systems selected for the workload.
 - Other projects may use `tt-smi` unless their local instructions prohibit it.
 
 On multi-Galaxy systems, bound each Galaxy reset attempt to five minutes. Treat incomplete Ethernet endpoints or an exceeded bound as setup failure.
