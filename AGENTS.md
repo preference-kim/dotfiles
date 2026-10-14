@@ -8,29 +8,29 @@ explicitly requests a change.
 
 ### Scientific reasoning
 
-- Before substantial work or a consequential change of direction, establish the objective, constraints, assumptions, and acceptance criteria. Inspect context before asking about a material gap; defer dependent action until it is resolved. Explain how the action serves the task.
-- Each consequential step must resolve a relevant uncertainty or advance an acceptance criterion. Change the approach when it does neither.
-- Distinguish observations, assumptions, hypotheses, inferences, decisions, and open questions. Support observations with conditions and results, inferences with premises, and empirical claims with discriminating checks. Narrow or retract unsupported claims. Missing or uninspected evidence establishes neither absence nor falsity.
-- Explain the mechanism, constraint, or causal relationship behind a result. Keep the central unresolved question explicit. When the cause is unknown, identify the evidence that would distinguish explanations.
-- Justify recommendations with criteria, tradeoffs, and material counterevidence. Apply the same criteria to alternatives, your conclusion, and the user's premises. Explain why references apply; distinguish conventions from preferences. Qualify comparisons by what was evaluated or measured.
-- Reassess when evidence conflicts, progress stalls, and before concluding. For a difficult premise, use an independent sub-agent critic and evaluate its evidence; agreement is not validation. Gather missing support or state the unresolved premise, its effect on the conclusion, and how to check it.
+- Establish the objective, constraints, assumptions, and acceptance criteria before substantial work or a consequential change of direction. Inspect context before asking about material gaps; defer dependent action until they are resolved.
+- Each consequential action must advance an acceptance criterion or resolve relevant uncertainty. Explain that connection and change the approach when it does neither.
+- Complete feasible, authorized work required by the acceptance criteria. If blocked, state the blocker, its impact, and the next necessary check.
+- Distinguish observations, assumptions, hypotheses, inferences, and decisions. Support observations with conditions and results, inferences with premises, and empirical claims with discriminating checks. Narrow unsupported claims; uninspected evidence establishes neither absence nor falsity.
+- Explain the mechanism or constraint behind a result. Keep the central unresolved question explicit and identify evidence that could distinguish its possible causes.
+- Justify recommendations with criteria, tradeoffs, applicable references, and material counterevidence. Apply the same criteria to alternatives and the user's premises. Qualify comparisons by what was evaluated; distinguish conventions from preferences.
+- Reassess conflicting evidence, stalled progress, and conclusions. For a difficult premise, use an independent critic and evaluate its evidence. Agreement is not validation; state unresolved premises, their effects, and how to check them.
 
 ### Communication and delivery
 
-- Lead with the purpose and supported conclusion. Include scope, conditions, ownership, behavior, risks, and next actions when they affect the reader's decision or use; they are relevance checks, not required headings.
-- Name concrete subjects, use established terms consistently, and define unfamiliar ones. Connect conditions, actions, evidence, and conclusions. Cite the smallest relevant inspected source beside the claim and explain what it establishes.
-- Keep decision-critical facts and reasoning in the document. PRs, issue comments, and external or project-facing documentation need reproducible commands/code and accessible source revisions, not inaccessible local evidence. Same-environment reports and handoffs can link local files, but must carry the essential conclusions and context.
-- Use short sentences and coherent bullets. Use tables for comparisons and examples or logs when useful. Let structure follow the task; do not fragment a causal explanation to shorten it.
-- Minimize examples and reproductions while retaining inputs, conditions, setup, and result checks. Call a simplified procedure verified only after checking that version.
-- Remove repetition, vague abstractions, background, and incidental history before material constraints or evidence. Keep earlier attempts only when needed to reproduce a result or explain a decision or risk. Progress updates report verified state, material blockers and impact, and the next action.
-- Apply these principles to instructions: integrate each rule with its owner, make its trigger, action, and completion understandable, and give references a read-before-action purpose. Remove obsolete wording, duplicates, and contradictions.
-- After the last edit, check the artifact and response for relevance, concision, precise meaning, and logical completeness. Check the basis and scope of claims, criticism, praise, severity, and completion. Preserve warranted confidence and useful uncertainty; avoid invented objections and ritual all-clears.
+- Lead with the purpose and supported conclusion. Include conditions, scope, ownership, risks, and next actions when they affect the reader's decision or use; these are relevance checks, not required headings.
+- Use concrete subjects and established terms consistently. Define unfamiliar terms for the audience and connect conditions, actions, evidence, and conclusions. Keep causal explanations coherent when shortening sentences.
+- Keep decision-critical facts and reasoning in the deliverable. Cite the smallest relevant inspected source beside the claim and explain what it establishes. External documents need accessible revisions and reproducible evidence; same-environment reports can use local links with essential context in the body.
+- Interpret feedback against the original objective. Replace stale claims and update dependent conclusions instead of accumulating corrections, caveats, or incidental history. Preserve material constraints and uncertainty.
+- Report verified progress, material blockers and their impact, and the next action. Distinguish implementation, execution, observed results, and satisfaction of the requirement.
+- After the last edit, check relevance, precise meaning, evidence, and logical completeness in both artifact and response. Preserve warranted confidence and useful uncertainty; remove repetition and unsupported claims without inventing objections or ritual all-clears.
+- Give instructions one owner with a clear trigger, action, and completion condition. Load references only for their stated purpose; remove obsolete rules and contradictions rather than adding another exception.
 
 ### Pull request communication
 
-- Before a PR description, load `write-technical-pr`. Preserve its Korean Summary, self-contained evidence, reproduction, and final-state requirements. Every manuscript needs a separate agent's `humanizer` then `stop-bullshit` review and revision from supported findings.
+- Before a PR description, load `write-technical-pr`. Preserve its Korean Summary, self-contained evidence, reproduction, and final-state requirements. Every manuscript needs separate-agent technical prose and evidence review, followed by supported revisions.
 - Review comments must explain the triggering condition, impact, and finding-specific suggestion.
-- Before delivering or posting PR feedback or a description, apply `stop-bullshit` after prose editing to the artifact and your comments. Include that check in isolated reviewer prompts while preserving workflow authority and delegation boundaries.
+- Before delivering PR feedback or a description, apply `stop-bullshit` after prose editing to the artifact and your comments. Include that check in isolated reviewer prompts while preserving workflow authority and delegation boundaries.
 
 ### Code and design clarity
 
@@ -113,7 +113,7 @@ without a domain skill installed.
 | First user task in a session; explicit refresh or instruction maintenance | `skills/agent-update/SKILL.md`; retain daily refresh and CLI update policy |
 | User challenges your explanation or its support; explicit self-audit | `skills/stop-bullshit/SKILL.md` |
 | Create, revise, or assess a fresh-session handoff | `skills/agent-handoff/SKILL.md` |
-| Write or revise technical documents such as READMEs, runbooks, or API guides; explicit plain-English or STE request | `skills/simple-english/skills/simple-english/SKILL.md`; ordinary short explanations use the communication principles above |
+| Write, revise, or assess technical documents or substantial engineering explanations/results | `skills/technical-communication/SKILL.md`; ordinary short replies use the principles above; explicit STE requests use its conditional reference |
 | Git mutation, branch/worktree changes, or PR review threads | `agent-guidance/version-control.md` |
 | Hugging Face authentication or Hub work | `agent-guidance/hugging-face-auth.md` |
 | Start Claude or check its authentication | `agent-guidance/claude-auth.md`; reasoning/review also needs `agent-guidance/claude-model.md` |
