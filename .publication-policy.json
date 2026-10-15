@@ -18,6 +18,7 @@
     "agent-file-sync.example.yaml",
     "agent-guidance/claude-auth.md",
     "agent-guidance/claude-model.md",
+    "agent-guidance/domain-research.md",
     "agent-guidance/handoffs.md",
     "agent-guidance/hugging-face-auth.md",
     "agent-guidance/server-notices.md",

@@ -9,6 +9,7 @@ explicitly requests a change.
 ### Scientific reasoning
 
 - Establish the objective, constraints, assumptions, and acceptance criteria before substantial work or a consequential change of direction. Inspect context before asking about material gaps; defer dependent action until they are resolved.
+- At the start of substantive work, establish the relevant concepts, definitions, and existing knowledge before framing the problem, designing, implementing, or interpreting experiments. Use inspected sources or current, sufficient prior research to guide execution. State unresolved conceptual uncertainty and resolve it before dependent decisions.
 - Each consequential action must advance an acceptance criterion or resolve relevant uncertainty. Explain that connection and change the approach when it does neither.
 - Complete feasible, authorized work required by the acceptance criteria. If blocked, state the blocker, its impact, and the next necessary check.
 - Distinguish observations, assumptions, hypotheses, inferences, and decisions. Support observations with conditions and results, inferences with premises, and empirical claims with discriminating checks. Narrow unsupported claims; uninspected evidence establishes neither absence nor falsity.
@@ -111,6 +112,7 @@ without a domain skill installed.
 | Before this action | Required context |
 | --- | --- |
 | First user task in a session; explicit refresh or instruction maintenance | `skills/agent-update/SKILL.md`; retain daily refresh and CLI update policy |
+| Investigate unfamiliar or contested domain concepts or conventions; make design or interpretation choices that depend on them | `agent-guidance/domain-research.md`; reuse current, sufficient research |
 | User challenges your explanation or its support; explicit self-audit | `skills/stop-bullshit/SKILL.md` |
 | Create, revise, or assess a fresh-session handoff | `skills/agent-handoff/SKILL.md` |
 | Write, revise, or assess technical documents or substantial engineering explanations/results | `skills/technical-communication/SKILL.md`; ordinary short replies use the principles above; explicit STE requests use its conditional reference |
