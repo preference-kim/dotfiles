@@ -47,6 +47,15 @@ class DeploymentTests(unittest.TestCase):
             config = copy.deepcopy(CONFIG); config['bootstrap']['private_url'] = value
             with self.assertRaises(ValueError): validate(config)
 
+    def test_reserved_key_names_reject_case_aliases(self):
+        for name in ['Config', 'CONFIG', 'Known_Hosts', 'AUTHORIZED_KEYS',
+                     'Id_Ed25519', 'ID_RSA', 'IDENTITY']:
+            with self.subTest(name=name):
+                config = copy.deepcopy(CONFIG)
+                config['paths']['cluster_key'] = '~/.ssh/' + name
+                with self.assertRaises(ValueError):
+                    validate(config)
+
     def test_missing_unknown_fields_do_not_fall_back(self):
         for section in ['bootstrap', 'paths']:
             config = copy.deepcopy(CONFIG); config[section]['unknown'] = 'x'

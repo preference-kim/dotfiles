@@ -34,6 +34,14 @@ class ProfileTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.validate(inv, reg, 'machine-a', 'tester', CONFIG)
 
+    def test_inventory_cannot_write_separately_approved_key_payloads(self):
+        for path in [CONFIG['paths']['cluster_key'], CONFIG['paths']['cluster_key'] + '.pub']:
+            with self.subTest(path=path):
+                inv, reg = self.fixture()
+                inv['profiles']['device-a']['files'].append({'path': path})
+                with self.assertRaises(ValueError):
+                    self.check(inv, reg)
+
     def test_server_keeps_compatibility_block(self):
         self.assertEqual(self.check(*self.fixture()), 'device-a')
 

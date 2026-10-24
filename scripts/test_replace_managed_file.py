@@ -78,16 +78,17 @@ class ReplaceTests(unittest.TestCase):
             writer.replace(self.root / 'missing', None, b'content', 0o644)
 
     def run_cli(self, data, target):
+        path_context = (contextlib.nullcontext() if data['path'].startswith('~/.ssh/')
+                        else patch.object(writer.Path, 'expanduser', return_value=target))
         with patch.object(writer, 'load_config', return_value=CONFIG), \
              patch.object(writer.sys, 'argv', ['writer']), \
-             patch.object(writer, 'checked_ssh_dir', side_effect=lambda: target.parent.mkdir(mode=0o700, exist_ok=True)), \
+             patch.dict(os.environ, {'HOME': str(self.root)}), \
              patch.object(writer.json, 'load', return_value=data), \
-             patch.object(writer.Path, 'expanduser', return_value=target), \
-             contextlib.redirect_stdout(io.StringIO()):
+             path_context, contextlib.redirect_stdout(io.StringIO()):
             return writer.main()
 
     def test_cli_creates_ssh_files_and_missing_ssh_directory(self):
-        ssh_dir = self.root / 'ssh'
+        ssh_dir = self.root / '.ssh'
         data = {'path': '~/.ssh/example_cluster.conf', 'before': None,
                 'after': 'Host example\n    HostName 192.0.2.10\n', 'mode': '0600'}
         self.assertEqual(self.run_cli(data, ssh_dir / 'example_cluster.conf'), 0)
@@ -98,8 +99,27 @@ class ReplaceTests(unittest.TestCase):
         self.assertEqual((ssh_dir / 'config').read_text(), data['after'])
         self.assertEqual(self.run_cli(data, ssh_dir / 'config'), 1)
 
+    def test_cli_preserves_existing_ssh_directory_mode(self):
+        ssh_dir = self.root / '.ssh'; ssh_dir.mkdir(); ssh_dir.chmod(0o755)
+        target = ssh_dir / 'example_cluster.conf'
+        target.write_text('old')
+        data = {'path': '~/.ssh/example_cluster.conf', 'before': 'old',
+                'after': 'new', 'mode': '0600'}
+        self.assertEqual(self.run_cli(data, target), 0)
+        self.assertEqual(target.read_text(), 'new')
+        self.assertEqual(ssh_dir.stat().st_mode & 0o777, 0o755)
+
+    def test_cli_rejects_symlinked_ssh_directory(self):
+        protected = self.root / 'protected'; protected.mkdir()
+        (self.root / '.ssh').symlink_to(protected, target_is_directory=True)
+        target = protected / 'example_cluster.conf'
+        data = {'path': '~/.ssh/example_cluster.conf', 'before': None,
+                'after': 'new', 'mode': '0600'}
+        self.assertEqual(self.run_cli(data, target), 1)
+        self.assertFalse(target.exists())
+
     def test_cli_installs_cluster_key_pair_with_key_modes(self):
-        ssh_dir = self.root / 'keys'
+        ssh_dir = self.root / '.ssh'
         key = {'path': '~/.ssh/example_cluster_key', 'before': None, 'after': 'synthetic private\n', 'mode': '0600'}
         pub = {'path': '~/.ssh/example_cluster_key.pub', 'before': None, 'after': 'synthetic public\n', 'mode': '0644'}
         self.assertEqual(self.run_cli(key, ssh_dir / 'example_cluster_key'), 0)

@@ -7,6 +7,7 @@ from pathlib import Path
 import stat
 import sys
 import uuid
+sys.dont_write_bytecode = True  # keep the dotfiles checkout clean
 from deployment_config import load_config, allowed_paths, checked_ssh_dir
 
 

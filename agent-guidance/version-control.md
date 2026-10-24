@@ -14,12 +14,18 @@ instructions specify another name. Never add co-author trailers.
 
 Use the primary checkout. Worktrees are limited to static analysis or documentation
 at a specific HEAD; builds and device tests stay in the current session checkout.
-A dirty checkout is not a reason to create a worktree. Preserve existing work:
-handle task-input changes in place, otherwise stash relevant tracked/untracked
-files or commit and push on an appropriate branch under the repository's rules.
-Before a blocked branch switch, commit locally or stash. Never discard or
-overwrite existing work. Restore stashes when safe at task completion and report
-restoration conflicts.
+A dirty checkout is not a reason to create a worktree. Before preparing a remote
+experiment checkout, read [the private team policy](team-development.md) for
+applicable lifecycle rules and scoped standing authorization. Discard or overwrite
+existing work only within an explicit user-authorized scope. Before destructive
+cleanup, verify exclusive checkout use and preserve active inputs; unresolved
+ownership or a live workload consuming affected files blocks cleanup.
+
+By default, preserve existing work: handle task-input changes in place, otherwise
+stash relevant tracked/untracked files or commit and push on an appropriate branch
+under the repository's rules. Before a blocked branch switch outside an authorized
+cleanup scope, commit locally or stash. Restore stashes when safe at task completion
+and report restoration conflicts.
 
 ## Pull requests
 

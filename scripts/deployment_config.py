@@ -43,7 +43,8 @@ def validate(config):
     for key, pattern in patterns.items():
         if not isinstance(paths[key], str) or not re.fullmatch(pattern, paths[key]):
             raise ValueError('destination outside its permitted role')
-    key_name = paths['cluster_key'].rsplit('/', 1)[1]
+    # Protect personal names on case-insensitive filesystems as well.
+    key_name = paths['cluster_key'].rsplit('/', 1)[1].casefold()
     if key_name in {'config', 'authorized_keys', 'authorized_keys2', 'known_hosts', 'known_hosts2', 'environment', 'rc', 'identity'} or key_name.startswith('id_'):
         raise ValueError('cluster key would replace a personal SSH file')
     return config

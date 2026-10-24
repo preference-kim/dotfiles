@@ -11,14 +11,12 @@ dest=${1:?usage: bootstrap-remote <ssh-destination> [profile]}
 shift
 profile=
 if [[ ${1:-} != --deployment-config && $# -gt 0 ]]; then profile=$1; shift; fi
-config_args=()
 if [[ $# -gt 0 ]]; then
     [[ $# == 2 && $1 == --deployment-config ]] || { echo "unexpected bootstrap arguments" >&2; exit 1; }
-    config_args=(--deployment-config "$2")
 fi
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 # Resolve settings on the trusted controller before contacting an unregistered server.
-config_b64=$(python3 "$script_dir/deployment_config.py" "${config_args[@]}" --bootstrap-base64)
+config_b64=$(python3 "$script_dir/deployment_config.py" "$@" --bootstrap-base64)
 [[ -z $profile || $profile =~ ^[A-Za-z0-9._-]+$ ]] || { echo "invalid profile name: $profile" >&2; exit 1; }
 fleet=$HOME/.config/agent-update/fleet
 for f in fleet.agekey private-repo-ed25519 private-repo-ed25519.pub github_known_hosts; do
@@ -28,7 +26,7 @@ recipient=$(age-keygen -y "$fleet/fleet.agekey")
 remote() { ssh -o BatchMode=yes "$dest" "$@"; }
 
 # Check the server before any key leaves this host.
-remote "bash -s -- $(printf '%q' "$recipient")" <<'CHECK'
+remote "bash -s" <<'CHECK'
 set -euo pipefail
 [[ $(uname -s) == Linux ]] || { echo "bootstrap supports Linux servers only" >&2; exit 1; }
 for tool in git python3 tar gzip sha256sum ssh ssh-keygen install; do
@@ -41,19 +39,21 @@ CHECK
 IFS= read -r -d '' remote_script <<'REMOTE' || true
 set -euo pipefail
 umask 077
-explicit_profile=${1:-}
+IFS= read -r explicit_profile
+IFS= read -r config_b64
+IFS= read -r expected_recipient
 profile=${explicit_profile:-$(hostname -s)}
 fleet=$HOME/.config/agent-update/fleet
 checkout=$HOME/.config/agent-update/repository
 dotfiles=$HOME/dotfiles
 # The ssh:// form is immune to url.*.insteadOf rules that rewrite git@github.com: to HTTPS.
 settings=()
-while IFS= read -r value; do settings+=("$value"); done < <(python3 - "$2" <<'CONFIG'
+while IFS= read -r value; do settings+=("$value"); done < <(
+    printf '%s' "$config_b64" | python3 -c '
 import base64,json,sys
-c=json.loads(base64.b64decode(sys.argv[1]))['bootstrap']
-for key in ['dotfiles_url','private_url','github_account']: print(c[key])
-CONFIG
-)
+c=json.loads(base64.b64decode(sys.stdin.read()))["bootstrap"]
+for key in ["dotfiles_url","private_url","github_account"]: print(c[key])
+')
 [[ ${#settings[@]} == 3 ]] || { echo "invalid bootstrap settings" >&2; exit 1; }
 dotfiles_url=${settings[0]}
 private_url=${settings[1]}
@@ -61,23 +61,16 @@ github_account=${settings[2]}
 state=${XDG_STATE_HOME:-$HOME/.local/state}/agent-update
 mkdir -p "$state" "$HOME/.local/bin"
 mkdir "$state/writer.lock" || { echo "agent-update writer lock is held: $state/writer.lock" >&2; exit 1; }
-trap 'rm -rf "$state/writer.lock"' EXIT
+work=
+trap 'if [[ -n $work ]]; then rm -rf -- "$work"; fi; rm -rf -- "$state/writer.lock"' EXIT
 echo "host=$(hostname) pid=$$ purpose=bootstrap" > "$state/writer.lock/owner"
 
 installed=$fleet/fleet.agekey
 [[ ! -L $fleet && ! -L $installed ]] || { echo "ambiguous fleet path" >&2; exit 1; }
-if [[ -e $installed ]]; then
-    keygen=$(command -v age-keygen || echo "$HOME/.local/bin/age-keygen")
-    [[ -x $keygen ]] || { echo "cannot verify the installed fleet identity" >&2; exit 1; }
-    [[ $("$keygen" -y "$installed") == "$3" ]] || { echo "fleet identity mismatch; explicit rotation required" >&2; exit 1; }
-fi
-mkdir -p "$HOME/.config/agent-update"
-tar -C "$HOME/.config/agent-update" -xf -
-chmod 700 "$HOME/.config/agent-update" "$fleet"
-chmod 600 "$fleet"/*
-
+# Repair the verifier before checking existing keys; do not replace keys to repair it.
 # Checksums are the GitHub release asset digests of FiloSottile/age v1.3.2.
-if ! age --version >/dev/null 2>&1 && ! "$HOME/.local/bin/age" --version >/dev/null 2>&1; then
+if ! { (age --version >/dev/null 2>&1 || "$HOME/.local/bin/age" --version >/dev/null 2>&1) &&
+       (age-keygen --version >/dev/null 2>&1 || "$HOME/.local/bin/age-keygen" --version >/dev/null 2>&1); }; then
     case $(uname -m) in
         x86_64) arch=amd64 sum=cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10 ;;
         aarch64) arch=arm64 sum=6b8dc4333c53a5a57c9e5834e3a48f92605d7154014cd07269ff3327db5d37f4 ;;
@@ -91,7 +84,21 @@ if ! age --version >/dev/null 2>&1 && ! "$HOME/.local/bin/age" --version >/dev/n
     tar -C "$work" -xzf "$work/age.tgz"
     install -m 0755 "$work/age/age" "$work/age/age-keygen" "$HOME/.local/bin/"
     rm -r "$work"
+    work=
 fi
+
+if [[ -e $installed ]]; then
+    keygen=$(command -v age-keygen || true)
+    if [[ -z $keygen ]] || ! "$keygen" --version >/dev/null 2>&1; then
+        keygen=$HOME/.local/bin/age-keygen
+    fi
+    [[ -x $keygen ]] || { echo "cannot verify the installed fleet identity" >&2; exit 1; }
+    [[ $("$keygen" -y "$installed") == "$expected_recipient" ]] || { echo "fleet identity mismatch; explicit rotation required" >&2; exit 1; }
+fi
+mkdir -p "$HOME/.config/agent-update"
+tar -C "$HOME/.config/agent-update" -xf -
+chmod 700 "$HOME/.config/agent-update" "$fleet"
+chmod 600 "$fleet"/*
 
 # Update an existing checkout only when it is this repository's clean root.
 checked_repo() {  # <dir> <expected origin>
@@ -104,7 +111,8 @@ import re,sys
 def identity(url):
     match=re.fullmatch(r'(?:https://github\.com/|ssh://git@github\.com/|git@github\.com:)([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)',url)
     if not match: raise SystemExit('unsupported repository origin')
-    return match[1].removesuffix('.git')
+    name = match[1]
+    return name[:-4] if name.endswith('.git') else name
 if identity(sys.argv[1]) != identity(sys.argv[2]): raise SystemExit('repository origin mismatch')
 ORIGIN
     [[ -z $(git -C "$dir" status --porcelain) ]] || { echo "$dir has local changes; resolve them first" >&2; return 1; }
@@ -166,6 +174,11 @@ os.replace(staging, path)
 print(f'registered {host} as profile {profile}')
 PY
 REMOTE
-COPYFILE_DISABLE=1 tar --no-xattrs -C "$fleet/.." -cf - fleet | \
-    remote "bash -c $(printf '%q' "$remote_script") -- $(printf '%q %q %q' "$profile" "$config_b64" "$recipient")"
+remote_command=$(python3 -c 'import shlex,sys; print("bash -c " + shlex.quote(sys.argv[1]) + " --")' "$remote_script")
+# Shell built-in read consumes only these lines, leaving the tar stream intact.
+# Keep the configuration packet out of the SSH command line.
+{
+    printf '%s\n' "$profile" "$config_b64" "$recipient"
+    COPYFILE_DISABLE=1 tar --no-xattrs -C "$fleet/.." -cf - fleet
+} | remote "$remote_command"
 echo "bootstrap complete for $dest; run agent-update for this host next"

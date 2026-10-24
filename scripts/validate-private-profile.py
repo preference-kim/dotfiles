@@ -10,6 +10,7 @@ import runpy
 import socket
 import sys
 import subprocess
+sys.dont_write_bytecode = True  # keep the dotfiles checkout clean
 from deployment_config import load_config, allowed_paths
 
 
@@ -31,7 +32,10 @@ def require(condition, message):
 
 
 def validate(inventory, registration, hostname, account, deployment):
+    # Key bytes have a separate payload approval; inventory file plans cannot supply them.
     allowed = allowed_paths(deployment)
+    key = deployment['paths']['cluster_key']
+    del allowed[key], allowed[key + '.pub']
     for profile in inventory['profiles'].values():
         for item in profile['files']:
             require(item['path'] in allowed, 'file plan outside configured destinations')
