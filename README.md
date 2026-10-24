@@ -2,7 +2,7 @@
 
 Personal development configuration and shared agent instructions for Claude and
 Codex. This repository maintains one canonical `AGENTS.md`, operational guidance
-for Moreh/TT-Metal work, and a shared skills submodule, alongside shell, tmux,
+for TT-Metal work with private team policy, and a shared skills submodule, alongside shell, tmux,
 Ubuntu setup, and credential-management resources.
 
 ## Repository layout
@@ -10,7 +10,7 @@ Ubuntu setup, and credential-management resources.
 | Path | Purpose |
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Stable working principles and triggers for loading task-specific guidance. |
-| [agent-guidance/](agent-guidance/) | Conditional guidance for Git, authentication, and Moreh/TT-Metal development. |
+| [agent-guidance/](agent-guidance/) | Conditional guidance for Git, authentication, TT-Metal APIs, and private team policy loading. |
 | [skills/](https://github.com/preference-kim/my-claude-skills) | Shared skills from `preference-kim/my-claude-skills`, including `agent-update` and `stop-bullshit`. |
 | [agent-file-sync.example.yaml](agent-file-sync.example.yaml) | Template for choosing where each host exposes instructions and skills. |
 | [bash/bashrc](bash/bashrc), [zsh/interactive.zsh](zsh/interactive.zsh), [git/config](git/config), [.tmux.conf](.tmux.conf) | Git and tmux settings that `agent-update` links on every host, and shell settings with the server banner that it links only on development servers. |
@@ -79,7 +79,7 @@ and cluster key. See [SECRETS.md](SECRETS.md) for the key model.
 
 ## Use and maintain the repository
 
-Edit working principles in [AGENTS.md](AGENTS.md). Keep detailed Moreh/TT-Metal
+Edit working principles in [AGENTS.md](AGENTS.md). Keep general TT-Metal
 procedures in [agent-guidance/tt-metal/](agent-guidance/tt-metal/) with explicit
 loading triggers in `AGENTS.md`. Reusable task workflows belong in the existing
 shared skill that owns them; see the [skill index](https://github.com/preference-kim/my-claude-skills#skills).
@@ -107,3 +107,8 @@ Private server configuration and enrolled credentials synchronize through
 a generic `agent-update` request do not fetch or apply private payloads. See
 [secret management](SECRETS.md) for enrollment and the separate source-review and
 approved-deployment workflow.
+
+Team operating procedures and project conventions live in private
+`team-development.md`; public guidance loads them at the point of use. Private
+`deployment.json` supplies bootstrap identity and managed destination paths.
+See [deployment configuration](skills/agent-update/references/private-deployment.md).

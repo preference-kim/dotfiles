@@ -1,21 +1,16 @@
 # TT device debugging and recovery
 
-The [basic guide](README.md) owns device locks and reset commands. Read it before
+The [basic guide](README.md) loads the private device access policy. Read it before
 device work, and [profiling](profiling.md) before trace-path debugging or
 performance interpretation. These hang rules apply to TT device workloads,
 not host-only installation, dependency resolution, or Git work.
 
 ## Diagnose before recovery
 
-When a TT experiment takes unexpectedly long, inspect its phase, processes, and
-output before waiting or retrying. Elapsed time alone does not establish a hang.
-If an executing workload has no output for over a minute, check for active JIT
-compilers such as GCC's `cc1plus`. If absent, investigate a possible hang.
-
-During initialization (imports, device opening, Fabric/topology, hugepages, or
-device-probing test collection), use a runtime error, command timeout, or evidence
-that progress stopped. The one-minute threshold does not apply. A live Galaxy
-reset can legitimately be quiet for minutes; respect its own bound.
+When a TT experiment takes unexpectedly long, inspect its phase, processes,
+and output before waiting or retrying. Apply the phase-specific no-progress
+criteria in the [team development policy](../team-development.md); elapsed time
+or quiet output alone does not establish a hang.
 
 For a suspected workload hang, retain the lock and collect live state before
 termination or reset. In the activated checkout:
@@ -30,28 +25,8 @@ evidence before recovery. Stop every live device-owning process before resetting
 
 ## Restore a known device state
 
-Treat the first unusually slow reset or post-reset device-opening failure as a
-setup failure. Report stage and impact; stop the live process, reset, and retry
-once under the lock unless the user/task specifies another budget. End each
-failed reset attempt before retrying. Exclude failed setup from measurements.
-Attribute a branch regression only with reproduction from a known-good device
-state or other code-specific evidence. Repeated setup failure is an infrastructure
-blocker; retain its logs.
-
-If a narrower reset fails, expanded recovery requires authorization for all
-targets. Follow the scope-verification rules in the
-[basic guide](README.md#reset-and-recovery).
-If the procedure or scope is unverified, obtain operator confirmation before
-expanding it.
-Stop device activity and finish necessary cleanup while retaining ownership,
-then release the narrower reservation before waiting for one reservation
-covering the union of workload and reset hosts. Retain an existing reservation
-if it already covers that scope. Never acquire nested locks or reset another
-owner's node. Once all targets are reserved, verify there are no live UMD/device
-mappings before resetting. Do not automatically extend recovery to every
-connected neighbor or assume that expanding the reset guarantees recovery. Every
-reset remains subject to [execution location](../../AGENTS.md#execution-
-location).
-
-Retain ownership of all targets during recovery. Launch only after required device
-counts and Ethernet endpoints are healthy.
+Load the [team development policy](../team-development.md) for retry budgets,
+reset scope, and reservation replacement. Keep ownership until device activity
+and required cleanup finish. Treat failed setup separately from measurements;
+attribute a code regression only with a known-good device baseline or other
+code-specific evidence. Preserve failure logs.

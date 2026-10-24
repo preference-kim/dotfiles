@@ -87,7 +87,7 @@ def validate_catalog(inventory):
         require(set(refs) <= catalog['rules'].keys(), 'unknown SSH rule')
         validate_bindings(context['bindings'])
     for profile in inventory['profiles'].values():
-        require(not any(f['path'] in {'~/.ssh/config', '~/.ssh/moreh_cluster.conf'}
+        require(not any(f['path'].startswith('~/.ssh/')
                         for f in profile['files']), 'SSH file snapshots are forbidden in version 2')
         if 'ssh' in profile:
             require('configuration_owner' not in profile, 'delegated profile cannot own SSH settings')

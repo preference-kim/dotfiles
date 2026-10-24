@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Read-only device binding and hosts layout checks; approval remains separate."""
+import argparse
 import collections
 import getpass
 import ipaddress
@@ -8,6 +9,8 @@ from pathlib import Path
 import runpy
 import socket
 import sys
+import subprocess
+from deployment_config import load_config, allowed_paths
 
 
 def hosts_records(text):
@@ -27,7 +30,11 @@ def require(condition, message):
         raise ValueError(message)
 
 
-def validate(inventory, registration, hostname, account):
+def validate(inventory, registration, hostname, account, deployment):
+    allowed = allowed_paths(deployment)
+    for profile in inventory['profiles'].values():
+        for item in profile['files']:
+            require(item['path'] in allowed, 'file plan outside configured destinations')
     role = registration.get('device_role')
     require(role in ('development-server', 'personal-device'), 'explicit role registration required')
     require(registration.get('account') == account, 'registration account mismatch')
@@ -165,12 +172,16 @@ def validate(inventory, registration, hostname, account):
 
 def main():
     try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--deployment-config')
+        args = parser.parse_args()
+        deployment = load_config(args.deployment_config)
         data = json.load(sys.stdin)
-        selected = validate(data['inventory'], data['registration'], socket.gethostname(), getpass.getuser())
+        selected = validate(data['inventory'], data['registration'], socket.gethostname(), getpass.getuser(), deployment)
         owner = data['inventory']['profiles'][selected].get('configuration_owner', selected)
         print(json.dumps({'verified': True, 'configuration_owner': owner, 'applies_here': owner == selected}))
         return 0
-    except (KeyError, TypeError, ValueError) as error:
+    except (OSError, KeyError, TypeError, ValueError, subprocess.CalledProcessError) as error:
         print(json.dumps({'verified': False, 'error_type': type(error).__name__}))
         return 1
 

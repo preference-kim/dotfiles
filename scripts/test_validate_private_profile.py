@@ -3,6 +3,7 @@ import copy
 import importlib.util
 from pathlib import Path
 import unittest
+from test_deployment_config import CONFIG
 
 spec = importlib.util.spec_from_file_location('profile_check', Path(__file__).with_name('validate-private-profile.py'))
 module = importlib.util.module_from_spec(spec)
@@ -24,7 +25,14 @@ class ProfileTests(unittest.TestCase):
         return inventory, registration
 
     def check(self, inv, reg):
-        return module.validate(inv, reg, 'machine-a', 'tester')
+        return module.validate(inv, reg, 'machine-a', 'tester', CONFIG)
+
+    def test_file_plan_must_match_configured_destination_not_only_schema_shape(self):
+        from test_deployment_config import CONFIG
+        inv, reg = self.fixture()
+        inv['profiles']['device-a']['files'].append({'path': '/etc/cloud/cloud.cfg.d/99-other-preserve-hosts.cfg'})
+        with self.assertRaises(ValueError):
+            module.validate(inv, reg, 'machine-a', 'tester', CONFIG)
 
     def test_server_keeps_compatibility_block(self):
         self.assertEqual(self.check(*self.fixture()), 'device-a')
@@ -173,7 +181,7 @@ class ProfileTests(unittest.TestCase):
         before = copy.deepcopy(reg)
         self.assertEqual(self.check(inv, reg), 'device-a')
         self.assertEqual(reg, before)
-        self.assertEqual(module.validate(inv, reg, 'machine-b', 'tester'), 'device-b')
+        self.assertEqual(module.validate(inv, reg, 'machine-b', 'tester', CONFIG), 'device-b')
 
     def test_delegated_profile_rejects_local_file_or_scope_plans(self):
         for key, value in [('files', [{'path': '/etc/hosts'}]),

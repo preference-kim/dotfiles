@@ -1,10 +1,11 @@
 # Publication boundary
 
 Dotfiles and its shared skills contain reusable public instructions and
-configuration. Established Moreh/TT-Metal guidance remains in `AGENTS.md` and
-`agent-guidance/tt-metal/`. New domain skills and project-derived additions need
-separate scope and disclosure review. Personal ownership, private repository
-visibility, and maintenance authority do not authorize confidential disclosure.
+configuration. Public `AGENTS.md` and `agent-guidance/tt-metal/` retain general
+principles, API guidance, and loaders. Team operations, project conventions, and
+deployment values belong in the registered private repository. New domain skills
+and project-derived additions need separate scope and disclosure review. Personal
+ownership, private repository visibility, and maintenance authority do not authorize confidential disclosure.
 
 Before staging or publishing, verify the destination audience and releasability
 of files, the full outgoing history, commit messages, and PR content. Internal

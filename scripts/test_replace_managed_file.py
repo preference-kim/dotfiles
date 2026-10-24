@@ -5,10 +5,13 @@ import io
 import os
 from pathlib import Path
 import shutil
+import stat
+from types import SimpleNamespace
 import sys
 import unittest
 from unittest.mock import patch
 import uuid
+from test_deployment_config import CONFIG
 
 spec = importlib.util.spec_from_file_location('writer', Path(__file__).with_name('replace-managed-file.py'))
 writer = importlib.util.module_from_spec(spec)
@@ -75,31 +78,34 @@ class ReplaceTests(unittest.TestCase):
             writer.replace(self.root / 'missing', None, b'content', 0o644)
 
     def run_cli(self, data, target):
-        with patch.object(writer.json, 'load', return_value=data), \
+        with patch.object(writer, 'load_config', return_value=CONFIG), \
+             patch.object(writer.sys, 'argv', ['writer']), \
+             patch.object(writer, 'checked_ssh_dir', side_effect=lambda: target.parent.mkdir(mode=0o700, exist_ok=True)), \
+             patch.object(writer.json, 'load', return_value=data), \
              patch.object(writer.Path, 'expanduser', return_value=target), \
              contextlib.redirect_stdout(io.StringIO()):
             return writer.main()
 
     def test_cli_creates_ssh_files_and_missing_ssh_directory(self):
         ssh_dir = self.root / 'ssh'
-        data = {'path': '~/.ssh/moreh_cluster.conf', 'before': None,
+        data = {'path': '~/.ssh/example_cluster.conf', 'before': None,
                 'after': 'Host example\n    HostName 192.0.2.10\n', 'mode': '0600'}
-        self.assertEqual(self.run_cli(data, ssh_dir / 'moreh_cluster.conf'), 0)
+        self.assertEqual(self.run_cli(data, ssh_dir / 'example_cluster.conf'), 0)
         self.assertEqual(ssh_dir.stat().st_mode & 0o777, 0o700)
-        self.assertEqual((ssh_dir / 'moreh_cluster.conf').stat().st_mode & 0o777, 0o600)
-        data.update(path='~/.ssh/config', after='Host *\nInclude ~/.ssh/moreh_cluster.conf\nHost *\n')
+        self.assertEqual((ssh_dir / 'example_cluster.conf').stat().st_mode & 0o777, 0o600)
+        data.update(path='~/.ssh/config', after='Host *\nInclude ~/.ssh/example_cluster.conf\nHost *\n')
         self.assertEqual(self.run_cli(data, ssh_dir / 'config'), 0)
         self.assertEqual((ssh_dir / 'config').read_text(), data['after'])
         self.assertEqual(self.run_cli(data, ssh_dir / 'config'), 1)
 
     def test_cli_installs_cluster_key_pair_with_key_modes(self):
         ssh_dir = self.root / 'keys'
-        key = {'path': '~/.ssh/moreh_cluster_sunho', 'before': None, 'after': 'synthetic private\n', 'mode': '0600'}
-        pub = {'path': '~/.ssh/moreh_cluster_sunho.pub', 'before': None, 'after': 'synthetic public\n', 'mode': '0644'}
-        self.assertEqual(self.run_cli(key, ssh_dir / 'moreh_cluster_sunho'), 0)
-        self.assertEqual(self.run_cli(pub, ssh_dir / 'moreh_cluster_sunho.pub'), 0)
-        self.assertEqual((ssh_dir / 'moreh_cluster_sunho').stat().st_mode & 0o777, 0o600)
-        self.assertEqual((ssh_dir / 'moreh_cluster_sunho.pub').stat().st_mode & 0o777, 0o644)
+        key = {'path': '~/.ssh/example_cluster_key', 'before': None, 'after': 'synthetic private\n', 'mode': '0600'}
+        pub = {'path': '~/.ssh/example_cluster_key.pub', 'before': None, 'after': 'synthetic public\n', 'mode': '0644'}
+        self.assertEqual(self.run_cli(key, ssh_dir / 'example_cluster_key'), 0)
+        self.assertEqual(self.run_cli(pub, ssh_dir / 'example_cluster_key.pub'), 0)
+        self.assertEqual((ssh_dir / 'example_cluster_key').stat().st_mode & 0o777, 0o600)
+        self.assertEqual((ssh_dir / 'example_cluster_key.pub').stat().st_mode & 0o777, 0o644)
         key['mode'] = '0644'
         self.assertEqual(self.run_cli(key, ssh_dir / 'other'), 1)
 
@@ -107,6 +113,12 @@ class ReplaceTests(unittest.TestCase):
         data = {'path': '/etc/hosts', 'before': None, 'after': '127.0.0.1 localhost\n', 'mode': '0644'}
         self.assertEqual(self.run_cli(data, self.root / 'missing-hosts'), 1)
         self.assertFalse((self.root / 'missing-hosts').exists())
+
+    def test_cli_rejects_unconfigured_same_role_destination(self):
+        data = {'path': '~/.ssh/other.conf', 'before': None, 'after': 'Host other', 'mode': '0600'}
+        target = self.root / 'other.conf'
+        self.assertEqual(self.run_cli(data, target), 1)
+        self.assertFalse(target.exists())
 
     def test_concurrent_creation_cannot_be_overwritten(self):
         target = self.root / 'new.cfg'
@@ -120,13 +132,23 @@ class ReplaceTests(unittest.TestCase):
         self.assertEqual(target.read_bytes(), b'other owner')
         self.assertFalse(list(self.root.glob('.agent-update-*')))
 
-    def test_cloud_config_rejects_non_root_owner_and_unrelated_settings(self):
-        with patch.object(writer.os, 'geteuid', return_value=0), patch.object(writer.os, 'getegid', return_value=0):
+    def test_cloud_config_requires_root_safe_parents_and_only_hosts_setting(self):
+        safe = SimpleNamespace(st_mode=stat.S_IFDIR | 0o755, st_uid=0, st_gid=0)
+        with patch.object(writer.os, 'geteuid', return_value=0), patch.object(writer.os, 'getegid', return_value=0), \
+             patch.object(writer.Path, 'lstat', return_value=safe):
+            with patch.object(writer, 'snapshot', side_effect=FileNotFoundError):
+                writer.validate_cloud_config(self.path, 'manage_etc_hosts: false\n')
+                with self.assertRaises(ValueError):
+                    writer.validate_cloud_config(self.path, 'manage_etc_hosts: false\nnetwork: disabled\n')
             with patch.object(writer, 'snapshot', return_value=(b'old', (501, 20, 0o644))):
                 with self.assertRaises(ValueError):
                     writer.validate_cloud_config(self.path, 'manage_etc_hosts: false\n')
-            with self.assertRaises(ValueError):
-                writer.validate_cloud_config(self.path, 'manage_etc_hosts: false\nnetwork: disabled\n')
+        for mode in [stat.S_IFLNK | 0o755, stat.S_IFDIR | 0o777]:
+            unsafe = SimpleNamespace(st_mode=mode, st_uid=0, st_gid=0)
+            with patch.object(writer.os, 'geteuid', return_value=0), patch.object(writer.os, 'getegid', return_value=0), \
+                 patch.object(writer.Path, 'lstat', return_value=unsafe):
+                with self.assertRaises(ValueError):
+                    writer.validate_cloud_config(self.path, 'manage_etc_hosts: false\n')
 
 
 unittest.main()

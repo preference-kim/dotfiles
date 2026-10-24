@@ -65,6 +65,11 @@
     "macos/iterm2-d2coding.json",
     "macos/vscode-fonts.json",
     "scripts/render-private-ssh.py",
-    "scripts/test_render_private_ssh.py"
+    "scripts/test_render_private_ssh.py",
+    "agent-guidance/team-development.md",
+    "scripts/deployment_config.py",
+    "scripts/test_deployment_config.py",
+    "scripts/test_deployment_loading.py",
+    "scripts/test_bootstrap_remote.py"
   ]
 }

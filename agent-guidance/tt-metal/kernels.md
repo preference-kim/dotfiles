@@ -1,15 +1,11 @@
 # TT kernel guide
 
-Read before writing or reviewing TT ops/kernels. Preserve these conservative Moreh conventions while checking the active checkout's APIs; version-specific names are not substitutes for source inspection.
+Read before writing or reviewing TT ops/kernels. Load the [team development policy](../team-development.md) for project conventions. Check the active checkout's APIs; version-specific names are not substitutes for source inspection.
 
 ## API, arguments, and allocation
 
-- Write/modify data-movement kernels with Device 2.0 APIs under `tt_metal/hw/inc/api/`, following the checkout's `docs/source/tt-metalium/tt_metal/apis/kernel_apis/data_movement/device_api_migration_guide.md`. Use `Noc`, `CircularBuffer`, and endpoint APIs rather than copying legacy examples.
-- Never use `invalidate_l1_cache()`.
 - Use per-core runtime args for values differing across cores, common runtime args for values shared across cores but varying between runs (including tensor addresses), and compile-time args otherwise.
-- Rely on the default program hash; do not define a custom `compute_program_hash`.
-- Use `TensorAccessor` for actual tensors. Prefer `CircularBufferConfig` + `CreateCircularBuffer` for program-local L1 scratch/workspace, accessed by CB index/base pointer; these remain supported public APIs. Program-local CB storage does **not** persist across programs. Cross-program persistence needs an explicitly managed allocation/lifetime; use `CreateBuffer(config)` with `config.buffer_type = BufferType::L1` only for an intentional tensor-like/runtime buffer with a verified nearby pattern.
-- CB scratch is a Moreh preference, not the only valid allocation API. The experimental Metal 2.0 host API also supports `ScratchpadSpec` + device `Scratchpad<T>` for program-scope raw L1 memory. Use that alternative only with the matching host API/binding/lifetime model, not as a drop-in for existing CB-based programs; provide synchronization explicitly.
+- Use `TensorAccessor` for actual tensors. `CircularBufferConfig` + `CreateCircularBuffer` provide program-local L1 scratch/workspace accessed by CB index/base pointer; these remain supported public APIs. Program-local CB storage does **not** persist across programs. Cross-program persistence needs an explicitly managed allocation/lifetime; use `CreateBuffer(config)` with `config.buffer_type = BufferType::L1` only for an intentional tensor-like/runtime buffer with a verified nearby pattern.
 - For manually managed non-tensor scratch, use raw address math from its CB/scratchpad base and explicit NoC coordinates, not `TensorAccessor`/`InterleavedAddrGen` bank mapping. A local CB pointer is not evidence of another core's CB address; verify the remote allocation and address.
 - Derive dimensions, tile sizes, alignment, and header sizes from existing constants/helpers rather than magic numbers.
 
@@ -49,6 +45,5 @@ Read before writing or reviewing TT ops/kernels. Preserve these conservative Mor
 
 ## Tests
 
-- New ops need `op_correctness` and trace-replay `op_performance` tests by default; follow [profiling](profiling.md) for measurement.
-- Add `op_breakdown` and its L1 debug interface only when explicitly requested. Use a simple interleaved L1 debug tensor `[num_cores, num_slots]`, with local writes like `debug_l1[slot] = x`; avoid an elaborate TensorAccessor abstraction for this interface.
+Use the test types and optional debug interfaces from the loaded team policy.
 - Follow the [basic guide](README.md) before running tests. Use its test placement and naming conventions.

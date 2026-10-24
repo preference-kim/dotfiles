@@ -26,13 +26,10 @@ required control work; surrounding input/output, events, and synchronization
 remain separate CQ commands. Order them before/after replay on the same CQ or
 coordinate CQs with events outside capture.
 
-For `models/common_moreh` tensor debugging, use `tensor_dump.py` with semantic
-`capture_tensor(...)` points and its `TensorDumpMixin`/generator integration.
-It clones into a persistent device buffer retained with the trace; host conversion
-and persistence happen after replay. Keep direct conversion, synchronization,
-and file I/O out of model code.
+For project-specific debug helpers, load the
+[team development policy](../team-development.md).
 
-Elsewhere, preallocate persistent debug tensors, write with warmed-up traceable
+For a generic trace-safe approach, preallocate persistent debug tensors, write with warmed-up traceable
 device ops, and read only after capture or as a CQ command following replay.
 Synchronize outside the trace and finish the host snapshot before another replay
 can overwrite the retained buffer.

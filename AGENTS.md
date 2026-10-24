@@ -107,7 +107,9 @@ even when discovery fails. If unavailable, stop that action and report the path.
 Load only applicable references, not every linked document.
 
 TT-Metal guidance below is part of this AGENTS.md and must remain accessible
-without a domain skill installed.
+without a domain skill installed. Public references load private team operations
+and project conventions through `agent-guidance/team-development.md`; missing
+private context blocks dependent work, not independent source inspection.
 
 | Before this action | Required context |
 | --- | --- |

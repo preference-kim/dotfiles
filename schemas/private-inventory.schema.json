@@ -93,12 +93,21 @@
               ],
               "properties": {
                 "path": {
-                  "enum": [
-                    "/etc/hosts",
-                    "~/.ssh/config",
-                    "~/.ssh/moreh_cluster.conf",
-                    "/etc/cloud/cloud.cfg.d/99-moreh-preserve-hosts.cfg"
-                  ]
+                  "anyOf": [
+                    {
+                      "const": "/etc/hosts"
+                    },
+                    {
+                      "const": "~/.ssh/config"
+                    },
+                    {
+                      "pattern": "^~/\\.ssh/[A-Za-z0-9][A-Za-z0-9_-]*\\.conf$"
+                    },
+                    {
+                      "pattern": "^/etc/cloud/cloud\\.cfg\\.d/99-[A-Za-z0-9][A-Za-z0-9_-]*-preserve-hosts\\.cfg$"
+                    }
+                  ],
+                  "type": "string"
                 },
                 "before": {
                   "type": [
@@ -478,10 +487,15 @@
                   "items": {
                     "properties": {
                       "path": {
-                        "enum": [
-                          "/etc/hosts",
-                          "/etc/cloud/cloud.cfg.d/99-moreh-preserve-hosts.cfg"
-                        ]
+                        "anyOf": [
+                          {
+                            "const": "/etc/hosts"
+                          },
+                          {
+                            "pattern": "^/etc/cloud/cloud\\.cfg\\.d/99-[A-Za-z0-9][A-Za-z0-9_-]*-preserve-hosts\\.cfg$"
+                          }
+                        ],
+                        "type": "string"
                       }
                     }
                   }

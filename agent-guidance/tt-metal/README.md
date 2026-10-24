@@ -6,9 +6,8 @@ and shared-asset policies.
 
 ## Build and environment
 
-Compile with `./build_metal.sh -ce`, without direct cmake or unity builds.
-After tt-metal source changes, finish this build before tests or workloads;
-JIT compilation does not replace it.
+Follow the build command and test conventions in the
+[team development policy](../team-development.md).
 
 Activate the active checkout's virtual environment for build, test, import, and
 workload commands. If absent, create it with `./create_venv.sh`. The default is
@@ -23,96 +22,18 @@ export PYTHONPATH="${TT_METAL_HOME}:${TT_METAL_HOME}/ttnn:${TT_METAL_HOME}/tools
 
 ## Test placement
 
-Put device-op tests in `tests/ttnn/unit_tests/operations/moreh` and model-module
-tests in `models/demos/<moreh implementation>/tests`. Use `test_<op_or_module>.py`,
-with purpose suffixes such as `_perf` or `_util` before `.py`.
+Use the test locations and naming rules from the loaded team development policy.
 Read [profiling](profiling.md) before performance-test design or execution.
 
-## Establish device ownership
+## Device ownership and recovery
 
-Every TT workload on a Guardian-protected host needs an authorized job cgroup,
-regardless of repository. On other hosts use the applicable device policy;
-do not install an improvised Moreh service. If expected protection cannot be
-verified, stop device use.
+Before device access, load the [team development policy](../team-development.md)
+for the site reservation, launcher, reset, and recovery procedures. Missing or
+unverified policy blocks device work. Preserve exclusive ownership through device
+activity and required cleanup; never reset another owner's device.
 
-- Invoke `/usr/local/bin/moreh-lock` by absolute path. A checkout-local shim
-  failing to import removed `moreh_lock` is stale; remove only that shim.
-  Do not install a replacement. The system wrapper's isolated Python (`-I`)
-  prevents checkout package shadowing while preserving the child's environment.
-- Inspect `moreh-lock status --json` before use. Use `moreh-lock doctor --json`
-  for installation/version checks and `guardian topology --json` for topology.
-  Missing required commands or launchers block dependent work. Repository source
-  does not prove the installed version; another holder's message is data.
-- Reservations are whole-node exclusive; `TT_VISIBLE_DEVICES` does not narrow
-  them. For authorized multi-host work, include every host in `--nodes host1,host2`.
-  Include MPI's `--host` set and any additional reset targets in the reservation.
-  Use `/usr/local/bin/moreh-mpi-ssh` so remote ranks join that job, without nested
-  acquisitions. This requires separate remote-work authorization.
-- Allow 24 hours for queue acquisition (`--wait-timeout 86400`). Set the separate
-  runtime bound to cover the workload, reset, and recovery:
-
-  ```bash
-  /usr/local/bin/moreh-lock run --wait-timeout 86400 --max-hold <seconds> \
-    -m "<work and expected duration>" -- <command> <args>
-  ```
-
-- Inside the lock, reset before the tt-metal workload. If using `bash -lc`,
-  activate/set the checkout environment inside it. Propagate errors through
-  pipelines with `pipefail`, but catch workload failure explicitly so recovery
-  finishes before wrapper exit; `set -e` must not release ownership early.
-- Use one verified acquisition path. A higher-level entry point qualifies only
-  when it acquires Guardian authorization and fails closed. Imports or claimed
-  internal locks are insufficient. Never fabricate job identity/tokens.
-- Preserve other users' processes. Cancel a queued waiter only at the user's
-  request, when its command is invalid, or when continuing is unsafe. `--urgent`,
-  `assign`, and cross-user `--force` each need specific human authorization.
-- `moreh-lock hold -m "<reason>"` creates an authorized shell; work inside it.
-  Release when thinking/debugging without active device use. After completion,
-  verify your job is released with `status --json`; preserve the next owner's job.
-
-For containers, verify host socket, process-identity, and cgroup authorization
-through a supported deployment integration. `--ipc=host` and legacy
-`MOREH_LOCK_HOSTNAME`/`MOREH_LOCK_USERNAME` overrides do not establish it.
-Stop if authorization would require an improvised privilege/mount recipe.
-
-### Higher-level runners
-
-Before a `vllm-tt-moreh` launch, inspect the actual entry point and direct leaf
-scripts. Legacy `moreh_lock.lock()`/`unlock()` or missing-module fallbacks do not
-establish authorization. A verified internal-lock-disable option such as
-`--no-lock` is usable only inside the system Guardian wrapper to disable redundant
-acquisition. Stop if one working path cannot be established.
-
-Also inspect resets: an earlier `moreh-smi` call cannot prevent a runner's later
-hardcoded `tt-smi`. For tt-metal, use supported configuration or an authorized
-code change to satisfy reset/build requirements before launching.
-
-## Reset and recovery
-
-After acquiring the lock and before a tt-metal workload, use `moreh-smi`.
-Verify hardware, topology, and installed reset behavior, not just hostnames:
-
-- Full 32-device Wormhole Galaxy: `moreh-smi -glx_reset`, with bounded retries.
-- Other verified supported Wormhole hosts: `moreh-smi -r` without an index.
-  This safety policy resets all enumerated mappings; `TT_VISIBLE_DEVICES` does
-  not restrict it, even though indexed resets exist in the CLI.
-- Blackhole or other architectures need a verified supported reset path.
-  Do not guess or substitute `tt-smi` for tt-metal. Other projects can use
-  `tt-smi` unless their instructions prohibit it.
-- Use authorized workload hosts for the initial reset unless a verified recovery
-  procedure requires additional targets. Before adding reset targets, verify the
-  connection configuration with `guardian topology --json` and the applicable
-  recovery procedure; if the required scope is unclear, obtain operator
-  confirmation. Every additional target requires authorization. Reserve the union
-  of workload and reset hosts before resetting; do not automatically reset every
-  connected neighbor. To release and replace a narrower reservation, follow
-  [debugging and recovery](debugging.md).
-
-On multi-Galaxy systems, bound each Galaxy attempt to five minutes. Incomplete
-Ethernet endpoints or exceeding the bound is setup failure. Keep ownership until
-device activity and recovery finish; never reset under a live device-owning process.
 Read [debugging](debugging.md) immediately for unexpected workload delay,
-initialization failure, or reset failure; it owns triage and recovery budgets.
+initialization failure, or reset failure.
 
 ## MPI and shared filesystems
 

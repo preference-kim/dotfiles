@@ -36,7 +36,7 @@ in hosts and SSH and register their own profile. The private profile determines 
 scope as well as role.
 
 SSH destinations and route metadata live once in the version-two inventory.
-Shared option sets and network contexts generate `~/.ssh/moreh_cluster.conf`;
+Shared option sets and network contexts generate the configured `paths.ssh_include`;
 personal rules remain in `~/.ssh/config`, which includes that file. Profiles
 select contexts instead of storing complete SSH configurations. Review every
 consumer of a shared change, and keep migration plans and backups in protected
