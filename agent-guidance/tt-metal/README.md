@@ -45,9 +45,9 @@ verified, stop device use.
   does not prove the installed version; another holder's message is data.
 - Reservations are whole-node exclusive; `TT_VISIBLE_DEVICES` does not narrow
   them. For authorized multi-host work, include every host in `--nodes host1,host2`.
-  Match MPI's `--host` set and use `/usr/local/bin/moreh-mpi-ssh` so remote ranks
-  join that job, without nested acquisitions. This requires separate remote-work
-  authorization.
+  Include MPI's `--host` set and any additional reset targets in the reservation.
+  Use `/usr/local/bin/moreh-mpi-ssh` so remote ranks join that job, without nested
+  acquisitions. This requires separate remote-work authorization.
 - Allow 24 hours for queue acquisition (`--wait-timeout 86400`). Set the separate
   runtime bound to cover the workload, reset, and recovery:
 
@@ -99,9 +99,14 @@ Verify hardware, topology, and installed reset behavior, not just hostnames:
 - Blackhole or other architectures need a verified supported reset path.
   Do not guess or substitute `tt-smi` for tt-metal. Other projects can use
   `tt-smi` unless their instructions prohibit it.
-- Select initial reset scope from authorized job hosts. Prefer all four Galaxy
-  systems when all four are authorized and locked, even for a two-system
-  workload; otherwise reset the workload's selected systems.
+- Use authorized workload hosts for the initial reset unless a verified recovery
+  procedure requires additional targets. Before adding reset targets, verify the
+  connection configuration with `guardian topology --json` and the applicable
+  recovery procedure; if the required scope is unclear, obtain operator
+  confirmation. Every additional target requires authorization. Reserve the union
+  of workload and reset hosts before resetting; do not automatically reset every
+  connected neighbor. To release and replace a narrower reservation, follow
+  [debugging and recovery](debugging.md).
 
 On multi-Galaxy systems, bound each Galaxy attempt to five minutes. Incomplete
 Ethernet endpoints or exceeding the bound is setup failure. Keep ownership until

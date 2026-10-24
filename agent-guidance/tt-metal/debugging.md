@@ -38,12 +38,20 @@ Attribute a branch regression only with reproduction from a known-good device
 state or other code-specific evidence. Repeated setup failure is an infrastructure
 blocker; retain its logs.
 
-If a narrower reset fails, full-cluster recovery requires all four hosts to be
-authorized. Release a narrow lock before waiting for the whole-cluster lock;
-retain it if already held. Once all target locks are held, verify there are no
-live UMD/device mappings before resetting. This reinitializes Ethernet links to
-unused neighbors that can otherwise remain incomplete. Every reset remains
-subject to [execution location](../../AGENTS.md#execution-location).
+If a narrower reset fails, expanded recovery requires authorization for all
+targets. Follow the scope-verification rules in the
+[basic guide](README.md#reset-and-recovery).
+If the procedure or scope is unverified, obtain operator confirmation before
+expanding it.
+Stop device activity and finish necessary cleanup while retaining ownership,
+then release the narrower reservation before waiting for one reservation
+covering the union of workload and reset hosts. Retain an existing reservation
+if it already covers that scope. Never acquire nested locks or reset another
+owner's node. Once all targets are reserved, verify there are no live UMD/device
+mappings before resetting. Do not automatically extend recovery to every
+connected neighbor or assume that expanding the reset guarantees recovery. Every
+reset remains subject to [execution location](../../AGENTS.md#execution-
+location).
 
-Retain the full-cluster lock during recovery. Launch only after required device
+Retain ownership of all targets during recovery. Launch only after required device
 counts and Ethernet endpoints are healthy.
