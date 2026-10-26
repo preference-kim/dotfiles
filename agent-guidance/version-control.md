@@ -27,6 +27,15 @@ under the repository's rules. Before a blocked branch switch outside an authoriz
 cleanup scope, commit locally or stash. Restore stashes when safe at task completion
 and report restoration conflicts.
 
+## Rebases
+
+After rebasing onto a base that absorbed other changes, re-review every conflict
+resolution and every auto-merged hunk against the intent of the upstream changes
+it absorbed. A clean merge does not establish semantic compatibility. Adapt to the
+new upstream design rather than working around it, and check whether the branch
+should adopt conventions the upstream introduced. Report a conflict between that
+design and the branch's own layering to the user before changing either.
+
 ## Pull requests
 
 Resolve a review thread only if its root author is an automated agent and the
