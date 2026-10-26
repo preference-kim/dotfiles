@@ -25,8 +25,9 @@ evidence before recovery. Stop every live device-owning process before resetting
 
 ## Restore a known device state
 
-Load the [team development policy](../team-development.md) for retry budgets,
-reset scope, and reservation replacement. Keep ownership until device activity
-and required cleanup finish. Treat failed setup separately from measurements;
+Before choosing or recommending recovery, or reporting that it is blocked,
+load the [team development policy](../team-development.md) for retry budgets,
+reset scope, reservation replacement, and the conditions for stopping. Keep
+ownership until device activity and required cleanup finish. Treat failed setup separately from measurements;
 attribute a code regression only with a known-good device baseline or other
 code-specific evidence. Preserve failure logs.

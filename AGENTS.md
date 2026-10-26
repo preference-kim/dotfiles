@@ -12,7 +12,7 @@ explicitly requests a change.
 - At the start of substantive work, establish the relevant concepts, definitions, and existing knowledge before framing the problem, designing, implementing, or interpreting experiments. Use inspected sources or current, sufficient prior research to guide execution. State unresolved conceptual uncertainty and resolve it before dependent decisions.
 - Before naming a technique or concept, verify its meaning and applicability against authoritative sources or current, sufficient prior research. Existing codebase terminology is a claim to check, not authority: correct a flawed concept and its affected implementation, names, and explanations within the authorized scope rather than perpetuating it or merely relabeling it.
 - Each consequential action must advance an acceptance criterion or resolve relevant uncertainty. Explain that connection and change the approach when it does neither.
-- Complete feasible, authorized work required by the acceptance criteria. If blocked, state the blocker, its impact, and the next necessary check.
+- Complete feasible, authorized work required by the acceptance criteria. Before stopping or requesting clarification because a prerequisite is unclear, consult the governing instructions and perform available, authorized checks that can resolve it. Continue when the prerequisite is satisfied; reuse established authorization within its scope. Otherwise, state the unresolved fact, checks performed, impact, and specific information or authorization needed.
 - Distinguish observations, assumptions, hypotheses, inferences, and decisions. Support observations with conditions and results, inferences with premises, and empirical claims with discriminating checks. Narrow unsupported claims; uninspected evidence establishes neither absence nor falsity.
 - Explain the mechanism or constraint behind a result. Keep the central unresolved question explicit and identify evidence that could distinguish its possible causes.
 - Justify recommendations with criteria, tradeoffs, applicable references, and material counterevidence. Apply the same criteria to alternatives and the user's premises. Qualify comparisons by what was evaluated; distinguish conventions from preferences.
@@ -105,7 +105,9 @@ root and skill links to their real directories before resolving relative paths.
 Use this checkout's `skills/<name>` for duplicate shared installations; preserve
 explicit overrides and report conflicts. Read each resource before its trigger,
 even when discovery fails. If unavailable, stop that action and report the path.
-Load only applicable references, not every linked document.
+Load only applicable references, not every linked document. A summary does not
+replace missing required context: consult the governing source before a dependent
+decision when its relevant requirements are missing, uncertain, or stale.
 
 TT-Metal guidance below is part of this AGENTS.md and must remain accessible
 without a domain skill installed. Public references load private team operations
@@ -125,7 +127,7 @@ private context blocks dependent work, not independent source inspection.
 | Plan or start shared-server workloads, allocation, or maintenance | `agent-guidance/server-notices.md` |
 | TT-Metal build, import, test, or workload; any TT device use, including unknown Guardian status; MPI or shared writable caches | `agent-guidance/tt-metal/README.md` |
 | Investigate a suspected TT device anomaly through reproduction, localization, upstream checks, or submission evidence | `skills/tt-device-investigation/SKILL.md`; excludes routine correctness/performance and standalone hang recovery |
-| Unexpectedly slow TT experiment; device hang, initialization, or reset failure | `agent-guidance/tt-metal/debugging.md`; basic guide before device work |
+| Unexpectedly slow TT experiment; device hang, initialization, or reset failure; recommend recovery or report a device-recovery blocker | `agent-guidance/tt-metal/debugging.md`; basic guide before device work |
 | Edit or review TT kernels/ops | `agent-guidance/tt-metal/kernels.md`; basic guide before execution |
 | Plan or implement TT op/module optimization or performance tests; TTNN trace capture/replay, profiling, or measurement interpretation | `agent-guidance/tt-metal/profiling.md`; basic guide before execution |
 | Interpret EvalScope speculative acceptance | `agent-guidance/tt-metal/evalscope.md` |

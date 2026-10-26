@@ -2,7 +2,8 @@
 
 Read before preparing remote experiment checkouts, TT builds, tests, device
 access, kernel/operation edits or reviews, and profiling decisions that depend
-on project conventions.
+on project conventions. Also read before recommending device recovery or
+reporting that recovery is blocked; these judgments depend on the same policy.
 
 Resolve `checkout` and `repository_url` literally from
 `~/.config/agent-update/private-sync.json`; require an exact origin match.
