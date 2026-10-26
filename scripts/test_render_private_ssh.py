@@ -43,6 +43,34 @@ def fixture():
 
 
 class CatalogTests(unittest.TestCase):
+    def test_verification_metadata_preserves_routes(self):
+        inv = fixture()
+        before = renderer.render(inv, 'device-a')
+        inv['profiles']['device-a']['ssh_verification'] = {
+            'expected_hostnames': {'node-a': ['machine-a']},
+            'excluded_routes': {'cluster-a': {
+                'reason': 'User excluded this route',
+                'resume_condition': 'User explicitly resumes checks'}}}
+        self.assertEqual(before, renderer.render(inv, 'device-a'))
+        self.assertEqual(before, renderer.render(inv, 'device-b'))
+
+    def test_verification_rejects_missing_scope_and_ambiguous_rules(self):
+        policies = [
+            {'expected_hostnames': {'missing': ['machine-a']}},
+            {'expected_hostnames': {'node-a': []}},
+            {'expected_hostnames': {'node-a': ['*']}},
+            {'expected_hostnames': {'node-a': ['machine-a', 'machine-a']}},
+            {'excluded_routes': {'node-a': {'reason': 'Unreachable'}}},
+            {'excluded_routes': {'node-a': {'reason': '', 'resume_condition': 'User request'}}},
+            {'excluded_routes': {'node-*': {'reason': 'User request', 'resume_condition': 'User request'}}},
+            {'unverified_is_success': True},
+        ]
+        for policy in policies:
+            inv = fixture()
+            inv['profiles']['device-a']['ssh_verification'] = policy
+            with self.subTest(policy=policy), self.assertRaises(ValueError):
+                renderer.render(inv, 'device-a')
+
     def test_shared_route_update_reaches_every_consumer(self):
         inv = fixture()
         before = renderer.render(inv, 'device-a')

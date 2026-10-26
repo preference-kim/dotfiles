@@ -116,6 +116,7 @@ def render(inventory, profile_id):
     context = catalog['contexts'][selection['context']]
     bindings = {**catalog['bindings'], **context['bindings'], **selection['bindings'],
                 'account': profile['account']}
+    declared_hosts = set()
     output = ['# Generated from the approved private SSH catalog. Do not edit.', 'Host *', '']
     for rule_id in context['rules']:
         rule = catalog['rules'][rule_id]
@@ -146,6 +147,7 @@ def render(inventory, profile_id):
             require(all(re.fullmatch(r'[A-Za-z0-9_.:%\[\]-]+', text(host)) for host in hosts),
                     'SSH rules require literal host names')
             hosts = list(dict.fromkeys(hosts))
+            declared_hosts.update(hosts)
             output += ['# ' + rule_id, 'Host ' + ' '.join(hosts)]
             seen = {}
             for ref in rule['option_sets']:
@@ -160,8 +162,33 @@ def render(inventory, profile_id):
                         value = '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
                     output.append('    ' + key + ' ' + value)
             output.append('')
+    validate_verification(profile, declared_hosts)
     output += ['Host *', '']
     return '\n'.join(output)
+
+
+def validate_verification(profile, declared_hosts):
+    verification = profile.get('ssh_verification', {})
+    require(isinstance(verification, dict) and
+            set(verification) <= {'expected_hostnames', 'excluded_routes'},
+            'invalid SSH verification policy')
+    for field in ['expected_hostnames', 'excluded_routes']:
+        entries = verification.get(field, {})
+        require(isinstance(entries, dict), 'invalid SSH verification entries')
+        require(set(entries) <= declared_hosts, 'verification alias is not declared by this profile')
+        for alias, value in entries.items():
+            require(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', alias),
+                    'verification aliases must be literal names')
+            if field == 'expected_hostnames':
+                require(isinstance(value, list) and value and
+                        all(isinstance(name, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', name)
+                            for name in value) and len(value) == len(set(value)),
+                        'expected hostnames must be unique literal names')
+            else:
+                require(isinstance(value, dict) and set(value) == {'reason', 'resume_condition'},
+                        'exclusion requires reason and resume condition')
+                text(value['reason'])
+                text(value['resume_condition'])
 
 
 def unique_object(pairs):
