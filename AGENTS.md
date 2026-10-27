@@ -39,6 +39,12 @@ explicitly requests a change.
 - Make normal and exceptional paths, state transitions, and ownership visible. Extract abstractions only for coherent responsibilities and meaningful contracts.
 - Make the smallest coherent change. Reshape stale logic and remove obsolete branches, comments, debug paths, and compatibility residue.
 
+### Reuse existing implementations
+
+- For new implementation or experiment work, before writing temporary code or scripts, search the current main branch and the working branch for an existing implementation that serves the purpose. Use it, write new code only for what it leaves uncovered, and report what was checked.
+- If an implementation of similar intent exists but cannot serve, establish why it cannot, what it was built for, and whether it can be extended while keeping that intent. Prefer that extension to a parallel implementation, within the authorized scope.
+- If the extension needs substantial work beyond the current task, open a GitHub issue in the repository that owns that code as backlog, separate from the current work. State the existing implementation, why it cannot serve, its original intent, and the proposed improvement. Report the issue and how the current task proceeds meanwhile.
+
 ### Build and test paths
 
 Use configured build/test paths. Redirect caches, temporary files, artifacts, or
