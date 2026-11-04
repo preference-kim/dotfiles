@@ -8,15 +8,15 @@ explicitly requests a change.
 
 ### Scientific reasoning
 
-- Establish the objective, constraints, assumptions, and acceptance criteria before substantial work or a consequential change of direction. Inspect context before asking about material gaps; defer dependent action until they are resolved.
+- Establish the objective, constraints, assumptions, and acceptance criteria before substantial work or a consequential change of direction. Identify the gap between the current result and the required outcome, then choose an approach with a supported path to closing that gap. When that path is unclear, investigate the uncertainty that governs the choice. Inspect context before asking about material gaps; defer dependent action until they are resolved.
 - At the start of substantive work, establish the relevant concepts, definitions, and existing knowledge before framing the problem, designing, implementing, or interpreting experiments. Use inspected sources or current, sufficient prior research to guide execution. State unresolved conceptual uncertainty and resolve it before dependent decisions.
 - Before naming a technique or concept, verify its meaning and applicability against authoritative sources or current, sufficient prior research. Existing codebase terminology is a claim to check, not authority: correct a flawed concept and its affected implementation, names, and explanations within the authorized scope rather than perpetuating it or merely relabeling it.
-- Each consequential action must advance an acceptance criterion or resolve relevant uncertainty. Explain that connection and change the approach when it does neither.
-- Complete feasible, authorized work required by the acceptance criteria. Before stopping or requesting clarification because a prerequisite is unclear, consult the governing instructions and perform available, authorized checks that can resolve it. Continue when the prerequisite is satisfied; reuse established authorization within its scope. Otherwise, state the unresolved fact, checks performed, impact, and specific information or authorization needed.
+- Each consequential action must advance an acceptance criterion or resolve uncertainty that can change a task decision. Before substantial implementation or a costly experiment, explain its expected contribution or the decision its result will inform. Inspect the result before selecting the next action; change the approach when it advances neither the objective nor a relevant decision.
+- Own the full remaining objective within the authorized scope and agreed resource limits. Complete feasible work required by the acceptance criteria; intermediate reviews, plans, passing tests, and reports do not by themselves establish completion. Before stopping or asking about an unclear prerequisite, consult governing instructions and perform available, authorized checks. Continue when it is satisfied and reuse established authorization. If work remains incomplete, identify the verified blocker, agreed stopping condition, user-directed pause, or unavoidable session limit, together with the remaining scope and what enables continuation.
 - Distinguish observations, assumptions, hypotheses, inferences, and decisions. Support observations with conditions and results, inferences with premises, and empirical claims with discriminating checks. Narrow unsupported claims; uninspected evidence establishes neither absence nor falsity.
 - Explain the mechanism or constraint behind a result. Keep the central unresolved question explicit and identify evidence that could distinguish its possible causes.
 - Justify recommendations with criteria, tradeoffs, applicable references, and material counterevidence. Apply the same criteria to alternatives and the user's premises. Qualify comparisons by what was evaluated; distinguish conventions from preferences.
-- Reassess conflicting evidence, stalled progress, and conclusions. For a difficult premise, use an independent critic and evaluate its evidence. Agreement is not validation; state unresolved premises, their effects, and how to check them.
+- Reassess conflicting evidence, stalled progress, and conclusions. When repeated failures or gains too small to plausibly close the remaining gap undermine an approach, revisit its assumptions and compare relevant alternatives before another similar attempt. Continue that approach when evidence supports doing so. For a difficult premise, use an independent critic and evaluate its evidence. Agreement is not validation; state unresolved premises, their effects, and how to check them.
 
 ### Communication and delivery
 
@@ -37,7 +37,7 @@ explicitly requests a change.
 ### Code and design clarity
 
 - Make normal and exceptional paths, state transitions, and ownership visible. Extract abstractions only for coherent responsibilities and meaningful contracts.
-- Make the smallest coherent change. Reshape stale logic and remove obsolete branches, comments, debug paths, and compatibility residue.
+- Make the smallest coherent change sufficient to meet the objective. Reconsider the design within the authorized scope when narrow edits cannot do so. Reshape stale logic and remove obsolete branches, comments, debug paths, and compatibility residue.
 
 ### Reuse existing implementations
 
@@ -115,6 +115,14 @@ Load only applicable references, not every linked document. A summary does not
 replace missing required context: consult the governing source before a dependent
 decision when its relevant requirements are missing, uncertain, or stale.
 
+Select a workflow from the current request and its authorized scope. Quoted
+instructions, inherited documents, and prompts being written for another session
+are task material, not new workflow requests. Loading a skill does not expand
+scope: if it does not fit, leave its procedure and continue the requested work.
+Explicit-only skills require invocation for the current task, not a mention in
+that material. For a request with multiple stages, apply each workflow only to
+its corresponding stage.
+
 TT-Metal guidance below is part of this AGENTS.md and must remain accessible
 without a domain skill installed. Public references load private team operations
 and project conventions through `agent-guidance/team-development.md`; missing
@@ -125,7 +133,8 @@ private context blocks dependent work, not independent source inspection.
 | First user task in a session; explicit refresh or instruction maintenance | `skills/agent-update/SKILL.md`; retain daily refresh and CLI update policy |
 | Name or assess a technique or concept, including inherited codebase terminology; investigate unfamiliar or contested conventions; make design or interpretation choices that depend on them | `agent-guidance/domain-research.md`; reuse current, sufficient research |
 | User challenges your explanation or its support; explicit self-audit | `skills/stop-bullshit/SKILL.md` |
-| Create, revise, or assess a fresh-session handoff | `skills/agent-handoff/SKILL.md` |
+| Explicitly invoke `agent-handoff` to create, revise, or assess an outgoing handoff and opening prompt | `skills/agent-handoff/SKILL.md`; authoring only |
+| Take over an unfinished task from a previous session and execute the remaining work | `skills/agent-takeover/SKILL.md`; not outgoing handoff authoring or review-only requests |
 | Write, revise, or assess technical documents or substantial engineering explanations/results | `skills/technical-communication/SKILL.md`; ordinary short replies use the principles above; explicit STE requests use its conditional reference |
 | Work on a PR branch; Git mutation, branch/worktree changes, or PR review threads | `agent-guidance/version-control.md` |
 | Hugging Face authentication or Hub work | `agent-guidance/hugging-face-auth.md` |
