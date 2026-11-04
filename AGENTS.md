@@ -127,7 +127,7 @@ private context blocks dependent work, not independent source inspection.
 | User challenges your explanation or its support; explicit self-audit | `skills/stop-bullshit/SKILL.md` |
 | Create, revise, or assess a fresh-session handoff | `skills/agent-handoff/SKILL.md` |
 | Write, revise, or assess technical documents or substantial engineering explanations/results | `skills/technical-communication/SKILL.md`; ordinary short replies use the principles above; explicit STE requests use its conditional reference |
-| Git mutation, branch/worktree changes, or PR review threads | `agent-guidance/version-control.md` |
+| Work on a PR branch; Git mutation, branch/worktree changes, or PR review threads | `agent-guidance/version-control.md` |
 | Hugging Face authentication or Hub work | `agent-guidance/hugging-face-auth.md` |
 | Start Claude or check its authentication | `agent-guidance/claude-auth.md`; reasoning/review also needs `agent-guidance/claude-model.md` |
 | Plan or start shared-server workloads, allocation, or maintenance | `agent-guidance/server-notices.md` |
@@ -142,8 +142,9 @@ private context blocks dependent work, not independent source inspection.
 
 Human-authored review threads remain for humans to resolve. Shared TT device use
 requires the applicable lock protocol. Personal harness maintenance belongs in
-personal repositories and ignored entry points; tracked project changes and
-publication require explicit project-scope authorization.
+personal repositories and ignored entry points. Tracked project changes and
+publication require explicit project-scope authorization, except the PR branch
+synchronization that `agent-guidance/version-control.md` owns.
 
 Maintenance/publication authority does not authorize confidential disclosure.
 Keep internal audits, evaluation inputs/results, logs, and incident evidence

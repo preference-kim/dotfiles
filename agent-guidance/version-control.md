@@ -2,7 +2,8 @@
 
 Personal harness maintenance targets personal repositories and ignored local
 entry points. Project discovery does not authorize tracked project changes or
-publication; obtain explicit project-scope authority. Before staging or publishing
+publication; obtain explicit project-scope authority. [PR work](#pr-branch-synchronization)
+carries its own commit and push authority. Before staging or publishing
 personal changes, read [PUBLICATION.md](../PUBLICATION.md).
 Disclosure-reviewed instruction updates in dotfiles and shared skills use `main`
 directly, without a PR. This selects the branch, not publication authority.
@@ -48,3 +49,21 @@ Remove temporary experiment/debug variables with their readers, exports, fallbac
 branches, and instructions. Expose only necessary variables defined by external
 packages, verified against the installed version. Validate affected behavior
 without the removed settings.
+
+## PR branch synchronization
+
+PR work is a change to the user's branch that backs an open PR, or to one the
+current task is authorized to submit as a PR. Unless the user asks for local-only
+work or no commit/push, it carries these duties without per-change approval:
+
+- Commit coherent units of the PR's intended change after their applicable checks.
+  Stage only those files; leave temporary experiment or debug edits uncommitted.
+- Push to the PR branch so no commit stays unpushed for more than about an hour
+  or past the end of the task. Push at natural pauses; do not wait for CI or
+  reviewers, or add checks solely for the push.
+- When a push makes the PR description stale, revise it with `write-technical-pr`,
+  run its review alongside continuing work, publish it, and report the update.
+
+Force-push and other history rewrites, merges, and pushes to other branches keep
+their existing authorization. If a push is rejected or would need one of them,
+report the blocker instead of forcing it.
