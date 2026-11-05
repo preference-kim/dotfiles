@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "github-pr-conversation",
+      "text": "GitHub PR conversation on team and own repositories: `gh api` (REST or GraphQL) calls that create, reply to, or edit PR/issue comments and review comments, submit or update PR reviews, and resolve or unresolve review threads (e.g. `repos/<owner>/<repo>/pulls/<n>/comments/<id>/replies`, `repos/<owner>/<repo>/issues/<n>/comments`, GraphQL addPullRequestReviewComment / addPullRequestReviewThreadReply / resolveReviewThread / unresolveReviewThread) are allowed when the repository owner is moreh-dev or preference-kim. This covers comment and thread operations only; merging, approving, closing PRs, deleting comments or branches, and repository settings changes are not covered."
+    }
+  ]
+}
