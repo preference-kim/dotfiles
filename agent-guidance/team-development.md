@@ -1,25 +1,26 @@
-# Load the private team development policy
+# Load the private team policies
 
-Read before preparing remote experiment checkouts, TT builds, tests, device
-access, kernel/operation edits or reviews, and profiling decisions that depend
-on project conventions. Also read before recommending device recovery or
-reporting that recovery is blocked; these judgments depend on the same policy.
+Two private documents hold team settings that public guidance must not contain.
+Read the applicable one before the work it governs:
+
+| Document | Read before | Owns |
+| --- | --- | --- |
+| `team-development.md` | Preparing remote experiment checkouts, TT builds, tests, device access, kernel/operation edits or reviews, and profiling decisions that depend on project conventions; recommending device recovery or reporting that recovery is blocked | Build/test conventions, device commands, reservation and recovery policy, remote checkout lifecycle, and project helper integrations |
+| `writing-policy.md` | Writing or revising a PR description or another technical document | Which repositories and work it covers, their PR-description defaults, project vocabulary and reporting conventions, and figure hosting |
 
 Resolve `checkout` and `repository_url` literally from
 `~/.config/agent-update/private-sync.json`; require an exact origin match.
 With existing authentication, fetch `origin/main`, record its commit, and read
-`team-development.md` using `git show <commit>:team-development.md`. Do not change
-checkout files, branches, or remotes, or substitute cached refs after a failed
-fetch. Missing registration, access, document, or verified applicability blocks
-only work dependent on that policy; independent source inspection can continue.
+the document using `git show <commit>:<document>`. Do not change checkout files,
+branches, or remotes, or substitute cached refs after a failed fetch. Missing
+registration, access, document, or verified applicability blocks only work
+dependent on that policy; independent work can continue. Report the limit.
 
-The private document owns team-specific build/test conventions, device commands,
-reservation and recovery policy, remote checkout lifecycle, and project helper
-integrations. Keep those settings out of public guidance. Apply relevant sections
-alongside public API
-and reasoning guidance. The policy may record explicit user-approved cleanup
-scopes; it does not independently authorize remote execution or publication.
-For isolated reviewers, supply applicable sections and the source revision;
-leaves report missing context without accessing unrelated private configuration.
-Reuse an inspected revision within the same unchanged task scope; recheck before
-work after a substantial pause or changed resources.
+Keep team settings out of public guidance. Apply relevant sections alongside
+public API, writing, and reasoning guidance. A policy may record explicit
+user-approved scopes, such as cleanup targets or figure uploads; it does not
+otherwise authorize remote execution or publication. For isolated reviewers,
+supply applicable sections and the source revision; leaves report missing
+context without accessing unrelated private configuration. Reuse an inspected
+revision within the same unchanged task scope; recheck before work after a
+substantial pause or changed resources.

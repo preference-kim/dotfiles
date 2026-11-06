@@ -109,6 +109,8 @@ a generic `agent-update` request do not fetch or apply private payloads. See
 approved-deployment workflow.
 
 Team operating procedures and project conventions live in private
-`team-development.md`; public guidance loads them at the point of use. Private
-`deployment.json` supplies bootstrap identity and managed destination paths.
+`team-development.md`, and team writing conventions in private `writing-policy.md`;
+public guidance loads them through `agent-guidance/team-development.md` at the
+point of use. Private `deployment.json` supplies bootstrap identity and managed
+destination paths.
 See [deployment configuration](skills/agent-update/references/private-deployment.md).

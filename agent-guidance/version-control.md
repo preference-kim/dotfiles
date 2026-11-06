@@ -61,8 +61,8 @@ work or no commit/push, it carries these duties without per-change approval:
 - Push to the PR branch so no commit stays unpushed for more than about an hour
   or past the end of the task. Push at natural pauses; do not wait for CI or
   reviewers, or add checks solely for the push.
-- When a push makes the PR description stale, revise it with `write-technical-pr`,
-  run its review alongside continuing work, publish it, and report the update.
+- When a push makes the PR description stale, update it under `write-technical-pr`'s
+  publication rules, running its review alongside continuing work.
 
 Force-push and other history rewrites, merges, and pushes to other branches keep
 their existing authorization. If a push is rejected or would need one of them,

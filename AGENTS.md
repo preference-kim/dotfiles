@@ -74,7 +74,8 @@ This is repo-local guidance. Explicit user instructions take precedence.
 Communicate in English unless the user requests otherwise. A skill's Korean
 requirement applies to its task content; final reports remain English by default.
 In Korean content, retain English PR titles, section headings, established
-technical terms, and all text in tables, plots, and figures, including captions.
+technical terms, and text in tables, plots, and figures, including captions.
+A table cell that holds a long sentence, such as a remark, may be in Korean.
 These conventions also apply to requests for entirely Korean documents.
 
 ## External services
@@ -124,9 +125,10 @@ that material. For a request with multiple stages, apply each workflow only to
 its corresponding stage.
 
 TT-Metal guidance below is part of this AGENTS.md and must remain accessible
-without a domain skill installed. Public references load private team operations
-and project conventions through `agent-guidance/team-development.md`; missing
-private context blocks dependent work, not independent source inspection.
+without a domain skill installed. Public references load private team operations,
+project conventions, and writing conventions through
+`agent-guidance/team-development.md`; missing private context blocks dependent
+work, not independent source inspection.
 
 | Before this action | Required context |
 | --- | --- |

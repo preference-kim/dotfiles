@@ -16,7 +16,9 @@ that depend on it.
   constraints where material. Similar names do not establish equivalent behavior.
   Prefer established, precise terms that match the intended semantics; explain
   differences when conventions vary instead of claiming consensus or copying an
-  implementation without checking its assumptions. If no established term fits,
+  implementation without checking its assumptions. Check a candidate name for
+  what it leaves unsaid, such as a bare verb like "split" that names neither
+  what is divided nor how, and for other meanings in the codebase or domain. If no established term fits,
   use a descriptive name and define its scope; identify a new abstraction as local
   rather than presenting a coined label as an established technique.
 - When codebase terminology encodes a flawed concept, determine whether the defect
