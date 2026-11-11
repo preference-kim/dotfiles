@@ -6,7 +6,7 @@ Read the applicable one before the work it governs:
 | Document | Read before | Owns |
 | --- | --- | --- |
 | `team-development.md` | Preparing remote experiment checkouts, TT builds, tests, device access, kernel/operation edits or reviews, and profiling decisions that depend on project conventions; recommending device recovery or reporting that recovery is blocked | Build/test conventions, device commands, reservation and recovery policy, remote checkout lifecycle, and project helper integrations |
-| `writing-policy.md` | Writing or revising a PR description or another technical document | Which repositories and work it covers, their PR-description defaults, project vocabulary and reporting conventions, and figure hosting |
+| `writing-policy.md` | Writing or revising a PR description or another technical document; sharing a document, figure, or spreadsheet with the team | Which repositories and work it covers, their PR-description defaults, project vocabulary and reporting conventions, and hosting of shared and supplementary material |
 
 Resolve `checkout` and `repository_url` literally from
 `~/.config/agent-update/private-sync.json`; require an exact origin match.
