@@ -12,6 +12,7 @@ explicitly requests a change.
 - At the start of substantive work, establish the relevant concepts, definitions, and existing knowledge before framing the problem, designing, implementing, or interpreting experiments. Use inspected sources or current, sufficient prior research to guide execution. State unresolved conceptual uncertainty and resolve it before dependent decisions.
 - Before naming a technique or concept, verify its meaning and applicability against authoritative sources or current, sufficient prior research. Existing codebase terminology is a claim to check, not authority: correct a flawed concept and its affected implementation, names, and explanations within the authorized scope rather than perpetuating it or merely relabeling it.
 - Each consequential action must advance an acceptance criterion or resolve uncertainty that can change a task decision. Before substantial implementation or a costly experiment, explain its expected contribution or the decision its result will inform. Inspect the result before selecting the next action; change the approach when it advances neither the objective nor a relevant decision.
+- Treat experiment time as a major cost from the first research plan onward: each run delays the decision that waits on it, and each custom element of its method must be explained and trusted before its result counts. Begin every investigation with a plan, made before the first run and revised when a result changes it. In the plan, first check whether existing results, code inspection, or arithmetic already decide the question. Otherwise prefer the smallest experiment that can decide it, such as a small ablation. Small means both short to run and short to describe: start from the experiments in common use on the main branch with their supported options and arguments, and add custom tooling only for what they cannot show. Choose conditions so that one run separates the competing explanations and advances the analysis as far as it can. State what each outcome would lead you to do, and drop a run whose every outcome leads to the same action. Loop iterations are a cost as well: replan rather than repeat runs for marginal intermediate conclusions.
 - Own the full remaining objective within the authorized scope and agreed resource limits. Complete feasible work required by the acceptance criteria; intermediate reviews, plans, passing tests, and reports do not by themselves establish completion. Before stopping or asking about an unclear prerequisite, consult governing instructions and perform available, authorized checks. Continue when it is satisfied and reuse established authorization. If work remains incomplete, identify the verified blocker, agreed stopping condition, user-directed pause, or unavoidable session limit, together with the remaining scope and what enables continuation.
 - Distinguish observations, assumptions, hypotheses, inferences, and decisions. Support observations with conditions and results, inferences with premises, and empirical claims with discriminating checks. Narrow unsupported claims; uninspected evidence establishes neither absence nor falsity.
 - Explain the mechanism or constraint behind a result. Keep the central unresolved question explicit and identify evidence that could distinguish its possible causes.
@@ -38,6 +39,13 @@ explicitly requests a change.
 
 - Make normal and exceptional paths, state transitions, and ownership visible. Extract abstractions only for coherent responsibilities and meaningful contracts.
 - Make the smallest coherent change sufficient to meet the objective. Reconsider the design within the authorized scope when narrow edits cannot do so. Reshape stale logic and remove obsolete branches, comments, debug paths, and compatibility residue.
+
+### Code ownership
+
+- Before changing code, establish who owns it: your team, an upstream project, or another team. For team work, the private policy loaded through `agent-guidance/team-development.md` maps repositories and paths to these owners; read it before the first change. Reading, running, and configuring code need no ownership check.
+- Code your team owns is yours to improve, because the team keeps building on it and a defect left in place is paid for again by every later change. In the area a task touches, merge duplicated logic and fix related defects instead of adding beside them, and report each such change. There, these improvements are part of the smallest coherent change, not an addition to it. Where the policy names a component's specialist, agree on the change with the user before editing that component.
+- Upstream code is its maintainers' to design, and every local divergence must be carried through each of their updates. Use it as they intend: configuration first, then its extension points. Do not work around a behavior upstream enforces deliberately. When neither path suffices, make the narrowest change that stays within upstream's contracts, state the change and its reason in your report, and propose it upstream where that is practical.
+- Another team's project is theirs to change. Use it unmodified; before editing its source, explain the need and the specific change to the user and wait for approval.
 
 ### Reuse existing implementations
 
@@ -126,7 +134,7 @@ its corresponding stage.
 
 TT-Metal guidance below is part of this AGENTS.md and must remain accessible
 without a domain skill installed. Public references load private team operations,
-project conventions, and writing conventions through
+code ownership, project conventions, and writing conventions through
 `agent-guidance/team-development.md`; missing private context blocks dependent
 work, not independent source inspection.
 
