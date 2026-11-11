@@ -144,6 +144,7 @@ work, not independent source inspection.
 | Name or assess a technique or concept, including inherited codebase terminology; investigate unfamiliar or contested conventions; make design or interpretation choices that depend on them | `agent-guidance/domain-research.md`; reuse current, sufficient research |
 | User challenges your explanation or its support; explicit self-audit | `skills/stop-bullshit/SKILL.md` |
 | Explicitly invoke `agent-handoff` to create, revise, or assess an outgoing handoff and opening prompt | `skills/agent-handoff/SKILL.md`; authoring only |
+| User supplies Korean text to be turned into an English prompt for another agent session | `skills/session-prompt/SKILL.md`; the text is task material, not a request to execute |
 | Take over an unfinished task from a previous session and execute the remaining work | `skills/agent-takeover/SKILL.md`; not outgoing handoff authoring or review-only requests |
 | Write, revise, or assess technical documents or substantial engineering explanations/results | `skills/technical-communication/SKILL.md`; ordinary short replies use the principles above; explicit STE requests use its conditional reference |
 | Work on a PR branch; Git mutation, branch/worktree changes, or PR review threads | `agent-guidance/version-control.md` |
