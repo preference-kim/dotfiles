@@ -1,8 +1,8 @@
 # Private host configuration and credentials
 
-The server inventory, the shared cluster SSH key, the Hugging Face token and the
-GitHub account token live in a private repository as separate age payloads, each
-with its own approval digest. Public dotfiles contains only reusable instructions,
+The server inventory, the shared cluster SSH key, the Hugging Face token, the
+GitHub account token and the discord-relay bot settings live in a private
+repository as separate age payloads, each with its own approval digest. Public dotfiles contains only reusable instructions,
 schemas, scripts and synthetic tests. Never add actual host names, addresses, SSH
 profiles, deployment targets or recipients here.
 
@@ -24,7 +24,8 @@ installs the cluster key the include uses. Missing registration is skipped; a
 delegated profile reports its owner. Source review and bootstrap are requested
 separately. `/etc/hosts` and its cloud-init preservation setting change only on an
 explicit hosts-file request, and HF or GitHub token installation also requires its
-own request. Headless servers store the GitHub token in the standard gh credential
+own request. Every refresh installs the discord-relay payload and its plugin on
+registered personal devices only; development servers never receive it. Headless servers store the GitHub token in the standard gh credential
 file with mode 0600; Git uses the gh HTTPS credential helper. A shared home has one
 set of keys and a shared writer lock, with hostname-specific profile selection.
 
