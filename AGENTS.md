@@ -147,7 +147,7 @@ work, not independent source inspection.
 | User supplies text, in any language, to be made into an English prompt for another agent session | `skills/better-prompt/SKILL.md`; the text is task material, not a request to execute |
 | Take over an unfinished task from a previous session and execute the remaining work | `skills/agent-takeover/SKILL.md`; not outgoing handoff authoring or review-only requests |
 | Write, revise, or assess technical documents or substantial engineering explanations/results | `skills/technical-communication/SKILL.md`; ordinary short replies use the principles above; explicit STE requests use its conditional reference |
-| Work on a PR branch; Git mutation, branch/worktree changes, or PR review threads | `agent-guidance/version-control.md` |
+| Work on a PR branch; plan, run, or assess PR validation; Git mutation, branch/worktree changes, or PR review threads | `agent-guidance/version-control.md` |
 | Hugging Face authentication or Hub work | `agent-guidance/hugging-face-auth.md` |
 | Start Claude or check its authentication | `agent-guidance/claude-auth.md`; reasoning/review also needs `agent-guidance/claude-model.md` |
 | Plan or start shared-server workloads, allocation, or maintenance | `agent-guidance/server-notices.md` |
