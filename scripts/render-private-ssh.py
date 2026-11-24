@@ -120,6 +120,13 @@ def render(inventory, profile_id):
     require('configuration_owner' not in profile, 'render on the configuration owner')
     selection = profile['ssh']
     context = catalog['contexts'][selection['context']]
+    profile_jumps = profile.get('ssh_fallback_jumps', {})
+    require(isinstance(profile_jumps, dict) and set(profile_jumps) <= set(context['rules']),
+            'fallback rule missing from selected context')
+    for rule_id, jump in profile_jumps.items():
+        rule = catalog['rules'][rule_id]
+        require('nodes' in rule and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', text(jump)) and
+                rule.get('fallback_jump', jump) == jump, 'invalid or conflicting profile fallback')
     bindings = {**catalog['bindings'], **context['bindings'], **selection['bindings'],
                 'account': profile['account']}
     declared_hosts = set()
@@ -168,15 +175,17 @@ def render(inventory, profile_id):
                     if lower in ADDITIVE_OPTIONS and any(c.isspace() or c in '#"' for c in value):
                         value = '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
                     output.append('    ' + key + ' ' + value)
-            if 'fallback_jump' in rule:
-                gateway = rule['fallback_jump']
+            gateway = profile_jumps.get(rule_id, rule.get('fallback_jump'))
+            if gateway is not None:
                 require(not {'proxyjump', 'proxycommand'}.intersection(seen) and gateway not in hosts,
                         'fallback conflicts with a fixed proxy or its own destination')
                 address = str(ipaddress.ip_address(seen['hostname']))
                 port = int(seen.get('port', '22'))
                 require(0 < port < 65536, 'invalid fallback destination port')
                 # Only a validated numeric endpoint enters this fixed, bounded reachability test.
-                probe = f"python3 -c 'import socket; socket.create_connection((\\\"{address}\\\", {port}), 1).close()' 2>/dev/null"
+                probe = ("python3 -c 'import socket,sys; "
+                         "socket.create_connection((sys.argv[1],int(sys.argv[2])),1).close()' "
+                         f"{address} {port} 2>/dev/null")
                 output.extend(['Match originalhost ' + ','.join(hosts) + ' !exec "' + probe + '"',
                                '    ProxyJump ' + gateway])
                 fallback_jumps.add(gateway)

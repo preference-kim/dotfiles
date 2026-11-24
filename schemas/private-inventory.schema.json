@@ -328,6 +328,17 @@
                 "minLength": 1
               }
             }
+          },
+          "ssh_fallback_jumps": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            }
           }
         },
         "oneOf": [
@@ -385,6 +396,9 @@
           ],
           "ssh_personal_migrations": [
             "ssh_verification",
+            "ssh"
+          ],
+          "ssh_fallback_jumps": [
             "ssh"
           ]
         },

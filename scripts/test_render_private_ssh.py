@@ -48,7 +48,7 @@ class CatalogTests(unittest.TestCase):
         inv = fixture()
         inv['nodes'][0]['ip'] = '127.0.0.1'
         ssh = inv['ssh']
-        ssh['rules']['local']['fallback_jump'] = 'gateway'
+        inv['profiles']['device-a']['ssh_fallback_jumps'] = {'local': 'gateway'}
         ssh['rules']['gateway'] = {'hosts': ['gateway'], 'option_sets': ['auth']}
         ssh['contexts']['internal']['rules'].append('gateway')
         inv['profiles']['device-a']['ssh']['context'] = 'internal'
@@ -56,6 +56,9 @@ class CatalogTests(unittest.TestCase):
             listener.bind(('127.0.0.1', 0))
             ssh['option_sets']['direct'][1][1] = str(listener.getsockname()[1])
             config = renderer.render(inv, 'device-a')
+            # Older OpenSSH clients reject escaped nested quotes inside Match exec.
+            match_line = next(line for line in config.splitlines() if line.startswith('Match '))
+            self.assertEqual(match_line.count('"'), 2)
             def effective_jump():
                 result = subprocess.run(['ssh', '-G', '-F', '/dev/stdin', 'node-a'], input=config,
                                         text=True, capture_output=True, check=True)
