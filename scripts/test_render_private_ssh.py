@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import unittest
 
@@ -43,6 +44,67 @@ def fixture():
 
 
 class CatalogTests(unittest.TestCase):
+    def test_mobile_rule_uses_the_declared_gateway_only_when_direct_is_unreachable(self):
+        inv = fixture()
+        inv['nodes'][0]['ip'] = '127.0.0.1'
+        ssh = inv['ssh']
+        ssh['rules']['local']['fallback_jump'] = 'gateway'
+        ssh['rules']['gateway'] = {'hosts': ['gateway'], 'option_sets': ['auth']}
+        ssh['contexts']['internal']['rules'].append('gateway')
+        inv['profiles']['device-a']['ssh']['context'] = 'internal'
+        with socket.socket() as listener:
+            listener.bind(('127.0.0.1', 0))
+            ssh['option_sets']['direct'][1][1] = str(listener.getsockname()[1])
+            config = renderer.render(inv, 'device-a')
+            def effective_jump():
+                result = subprocess.run(['ssh', '-G', '-F', '/dev/stdin', 'node-a'], input=config,
+                                        text=True, capture_output=True, check=True)
+                return [line for line in result.stdout.splitlines() if line.startswith('proxyjump ')]
+            self.assertEqual(effective_jump(), ['proxyjump gateway'])
+            listener.listen(1)
+            self.assertIn(effective_jump(), ([], ['proxyjump none']))
+        ssh['contexts']['internal']['rules'].remove('gateway')
+        with self.assertRaises(ValueError):
+            renderer.render(inv, 'device-a')
+
+    def test_required_alias_must_be_rendered_and_cannot_be_excluded(self):
+        inv = fixture()
+        v = inv['profiles']['device-a']['ssh_verification'] = {'required_cluster_key_routes': ['node-a']}
+        renderer.render(inv, 'device-a')
+        for invalid in (['absent'], ['node-a', 'node-a'], 'node-a'):
+            v['required_cluster_key_routes'] = invalid
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                renderer.render(inv, 'device-a')
+        v.update(required_cluster_key_routes=['node-a'],
+                 excluded_routes={'node-a': {'reason': 'offline', 'resume_condition': 'online'}})
+        with self.assertRaises(ValueError):
+            renderer.render(inv, 'device-a')
+
+    def test_approved_personal_migration_is_exact_scoped_and_idempotent(self):
+        inv = fixture()
+        p = inv['profiles']['device-a']
+        old = 'Host node-a\n    User developer\n    ForwardAgent yes\n'
+        p.update(ssh_verification={'required_cluster_key_routes': ['node-a']},
+                 ssh_personal_migrations={'node-a': [old]})
+        renderer.render(inv, 'device-a')
+        rest = '# unrelated\n\nHost another\n    User other\n'
+        for config in ['', rest, old + rest]:
+            expected = config[len(old):] if config.startswith(old) else config
+            self.assertEqual(renderer.migrate_personal_config(config, p), expected)
+            self.assertEqual(renderer.migrate_personal_config(expected, p), expected)
+        for different in (old.replace('yes', 'no'), old + '  Port 2200\n', old + old,
+                          old.replace('Host node-a', 'Host node-a another')):
+            with self.subTest(different=different), self.assertRaises(ValueError):
+                renderer.migrate_personal_config(different, p)
+        condition = 'Match originalhost node-a !exec "test -e /example"\n    ProxyJump gateway\n'
+        p['ssh_personal_migrations']['node-a'].append(condition)
+        self.assertEqual(renderer.migrate_personal_config(old + '\n' + condition + rest, p), '\n' + rest)
+        with self.assertRaises(ValueError):
+            renderer.migrate_personal_config(old + condition.replace('/example', '/other'), p)
+        p['ssh_personal_migrations']['node-a'][0] += 'Host another\n'
+        with self.assertRaises(ValueError):
+            renderer.render(inv, 'device-a')
+
     def test_verification_metadata_preserves_routes(self):
         inv = fixture()
         before = renderer.render(inv, 'device-a')

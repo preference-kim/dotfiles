@@ -31,12 +31,38 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def hosts_on_refresh(profile):
+    enabled = profile.get('hosts_scope', {}).get('apply_on_refresh', False)
+    require(type(enabled) is bool, 'hosts refresh setting must be boolean')
+    require(not enabled or (profile['device_role'] == 'personal-device' and
+                            'configuration_owner' not in profile),
+            'recurring hosts changes require a personal configuration owner')
+    return enabled
+
+
+def check_required_keys(rendered, profile, key):
+    for alias in profile.get('ssh_verification', {}).get('required_cluster_key_routes', []):
+        # Inspect only the generated include here. The install stage also checks the
+        # complete user/system configuration, jump hosts and the accepted key.
+        result = subprocess.run(['ssh', '-G', '-F', '/dev/stdin', alias], input=rendered, text=True,
+                                capture_output=True, check=True)
+        options = collections.defaultdict(list)
+        for line in result.stdout.splitlines():
+            name, _, value = line.partition(' ')
+            options[name].append(value)
+        expected = {'identityfile': [key], 'identitiesonly': ['yes'], 'identityagent': ['none'],
+                    'forwardagent': ['no'], 'stricthostkeychecking': ['true']}
+        require(all(options[name] == values for name, values in expected.items()),
+                'required route does not select the distributed key exclusively: ' + alias)
+
+
 def validate(inventory, registration, hostname, account, deployment):
     # Key bytes have a separate payload approval; inventory file plans cannot supply them.
     allowed = allowed_paths(deployment)
     key = deployment['paths']['cluster_key']
     del allowed[key], allowed[key + '.pub']
     for profile in inventory['profiles'].values():
+        hosts_on_refresh(profile)
         for item in profile['files']:
             require(item['path'] in allowed, 'file plan outside configured destinations')
     role = registration.get('device_role')
@@ -56,7 +82,8 @@ def validate(inventory, registration, hostname, account, deployment):
         renderer = runpy.run_path(str(Path(__file__).with_name('render-private-ssh.py')))
         renderer['validate_catalog'](inventory)
         if 'ssh' in profile:
-            renderer['render'](inventory, selected)
+            rendered = renderer['render'](inventory, selected)
+            check_required_keys(rendered, profile, key)
     owner_id = profile.get('configuration_owner')
     if 'configuration_owner' in profile:
         require(isinstance(owner_id, str) and bool(owner_id) and owner_id != selected,
@@ -182,8 +209,10 @@ def main():
         deployment = load_config(args.deployment_config)
         data = json.load(sys.stdin)
         selected = validate(data['inventory'], data['registration'], socket.gethostname(), getpass.getuser(), deployment)
-        owner = data['inventory']['profiles'][selected].get('configuration_owner', selected)
-        print(json.dumps({'verified': True, 'configuration_owner': owner, 'applies_here': owner == selected}))
+        profile = data['inventory']['profiles'][selected]
+        owner = profile.get('configuration_owner', selected)
+        print(json.dumps({'verified': True, 'configuration_owner': owner, 'applies_here': owner == selected,
+                          'apply_hosts_on_refresh': hosts_on_refresh(profile)}))
         return 0
     except (OSError, KeyError, TypeError, ValueError, subprocess.CalledProcessError) as error:
         print(json.dumps({'verified': False, 'error_type': type(error).__name__}))

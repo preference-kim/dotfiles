@@ -2,7 +2,9 @@
 """Render shared SSH rules; no filesystem access, decryption, or deployment."""
 import argparse
 import fnmatch
+import ipaddress
 import json
+from pathlib import Path
 import re
 import string
 import sys
@@ -62,7 +64,8 @@ def validate_catalog(inventory):
             require(key.lower() not in {'host', 'match', 'include'}, 'scope directive in option set')
             text(value)
     for rule in catalog['rules'].values():
-        require(set(rule) <= {'nodes', 'hosts', 'aliases', 'exclude_aliases', 'option_sets'}, 'invalid SSH rule fields')
+        require(set(rule) <= {'nodes', 'hosts', 'aliases', 'exclude_aliases', 'option_sets', 'fallback_jump'},
+                'invalid SSH rule fields')
         require(('nodes' in rule) != ('hosts' in rule), 'rule needs nodes or hosts')
         targets = rule.get('nodes', rule.get('hosts'))
         require(isinstance(targets, list) and targets and len(targets) == len(set(targets)),
@@ -75,6 +78,9 @@ def validate_catalog(inventory):
             require(set(targets) <= nodes.keys(), 'unknown SSH node')
         else:
             require('aliases' not in rule, 'aliases apply only to nodes')
+        if 'fallback_jump' in rule:
+            require('nodes' in rule and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', text(rule['fallback_jump'])),
+                    'fallback jump requires nodes and a literal gateway alias')
         refs = rule['option_sets']
         require(isinstance(refs, list) and refs and len(refs) == len(set(refs)),
                 'empty or duplicate option-set references')
@@ -117,6 +123,7 @@ def render(inventory, profile_id):
     bindings = {**catalog['bindings'], **context['bindings'], **selection['bindings'],
                 'account': profile['account']}
     declared_hosts = set()
+    fallback_jumps = set()
     output = ['# Generated from the approved private SSH catalog. Do not edit.', 'Host *', '']
     for rule_id in context['rules']:
         rule = catalog['rules'][rule_id]
@@ -161,8 +168,22 @@ def render(inventory, profile_id):
                     if lower in ADDITIVE_OPTIONS and any(c.isspace() or c in '#"' for c in value):
                         value = '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
                     output.append('    ' + key + ' ' + value)
+            if 'fallback_jump' in rule:
+                gateway = rule['fallback_jump']
+                require(not {'proxyjump', 'proxycommand'}.intersection(seen) and gateway not in hosts,
+                        'fallback conflicts with a fixed proxy or its own destination')
+                address = str(ipaddress.ip_address(seen['hostname']))
+                port = int(seen.get('port', '22'))
+                require(0 < port < 65536, 'invalid fallback destination port')
+                # Only a validated numeric endpoint enters this fixed, bounded reachability test.
+                probe = f"python3 -c 'import socket; socket.create_connection((\\\"{address}\\\", {port}), 1).close()' 2>/dev/null"
+                output.extend(['Match originalhost ' + ','.join(hosts) + ' !exec "' + probe + '"',
+                               '    ProxyJump ' + gateway])
+                fallback_jumps.add(gateway)
             output.append('')
+    require(fallback_jumps <= declared_hosts, 'fallback gateway missing from selected context')
     validate_verification(profile, declared_hosts)
+    personal_migrations(profile)
     output += ['Host *', '']
     return '\n'.join(output)
 
@@ -170,8 +191,15 @@ def render(inventory, profile_id):
 def validate_verification(profile, declared_hosts):
     verification = profile.get('ssh_verification', {})
     require(isinstance(verification, dict) and
-            set(verification) <= {'expected_hostnames', 'excluded_routes'},
+            set(verification) <= {'expected_hostnames', 'excluded_routes', 'required_cluster_key_routes'},
             'invalid SSH verification policy')
+    required = verification.get('required_cluster_key_routes', [])
+    require(isinstance(required, list) and all(isinstance(alias, str) and
+            re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', alias) for alias in required) and
+            len(required) == len(set(required)) and set(required) <= declared_hosts,
+            'required cluster-key route is missing, duplicated or invalid')
+    require(not set(required).intersection(verification.get('excluded_routes', {})),
+            'a required cluster-key route cannot be excluded')
     for field in ['expected_hostnames', 'excluded_routes']:
         entries = verification.get(field, {})
         require(isinstance(entries, dict), 'invalid SSH verification entries')
@@ -199,13 +227,69 @@ def unique_object(pairs):
     return result
 
 
+def personal_migrations(profile):
+    migrations = profile.get('ssh_personal_migrations', {})
+    required = profile.get('ssh_verification', {}).get('required_cluster_key_routes', [])
+    require(isinstance(migrations, dict) and set(migrations) <= set(required),
+            'personal stanza migration requires a declared cluster-key route')
+    for alias, stanzas in migrations.items():
+        require(isinstance(stanzas, list) and 1 <= len(stanzas) <= 2, 'invalid legacy stanza list')
+        for index, before in enumerate(stanzas):
+            require(isinstance(before, str) and before.endswith('\n') and '\r' not in before,
+                    'invalid legacy stanza text')
+            header, *lines = before.splitlines()
+            if index == 0:
+                require(header == 'Host ' + alias and lines and all(re.fullmatch(
+                    r'[ \t]+(?:HostName|Port|User|IdentityFile|IdentitiesOnly|ForwardAgent|IdentityAgent|ProxyJump)[ \t]+[^\s#]+',
+                    line, re.IGNORECASE) for line in lines), 'invalid legacy Host stanza')
+            else:
+                # Compared as text for removal only. Never evaluate a supplied command.
+                require(header.startswith('Match originalhost ' + alias + ' !exec ') and
+                        len(lines) == 1 and re.fullmatch(r'[ \t]+ProxyJump[ \t]+[A-Za-z0-9._-]+', lines[0]),
+                        'invalid legacy conditional jump stanza')
+    return migrations
+
+
+def migrate_personal_config(config, profile):
+    """Remove only exact approved single-alias stanzas, preserving surrounding text."""
+    sections = re.split(r'(?im)(?=^[ \t]*(?:Host|Match)[ \t=])', config)
+    for alias, stanzas in personal_migrations(profile).items():
+        expected = {stanza.split(' ', 1)[0].lower(): stanza for stanza in stanzas}
+        found = set()
+        for index, section in enumerate(sections):
+            header = section.partition('\n')[0].split('#', 1)[0].strip()
+            fields = re.split(r'[ \t=]+', header.lower())
+            kind = fields[0]
+            host_match = kind == 'host' and alias.lower() in fields[1:]
+            conditional_match = (fields[:2] == ['match', 'originalhost'] and len(fields) > 2 and
+                                 alias.lower() in fields[2].split(','))
+            if not (host_match or conditional_match):
+                continue
+            require(kind in expected and kind not in found, 'unapproved or duplicate personal stanza: ' + alias)
+            before = expected[kind]
+            remainder = section[len(before):]
+            require(section.startswith(before) and
+                    all(not line.strip() or line.lstrip().startswith('#') for line in remainder.splitlines()),
+                    'personal stanza differs from approved migration: ' + alias)
+            sections[index] = remainder
+            found.add(kind)
+    return ''.join(sections)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--profile', required=True)
+    parser.add_argument('--personal-config', type=Path,
+                        help='emit a candidate personal config after exact approved stanza removals')
     args = parser.parse_args()
     try:
-        sys.stdout.write(render(json.load(sys.stdin, object_pairs_hook=unique_object), args.profile))
-    except (KeyError, TypeError, ValueError) as error:
+        inventory = json.load(sys.stdin, object_pairs_hook=unique_object)
+        result = render(inventory, args.profile)
+        if args.personal_config is not None:
+            with args.personal_config.open(newline='') as source:
+                result = migrate_personal_config(source.read(), inventory['profiles'][args.profile])
+        sys.stdout.buffer.write(result.encode())
+    except (OSError, KeyError, TypeError, ValueError) as error:
         print('SSH inventory validation failed: ' + str(error), file=sys.stderr)
         return 1
     return 0

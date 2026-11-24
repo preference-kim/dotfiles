@@ -58,6 +58,22 @@ class InstallTests(unittest.TestCase):
         self.assertEqual((code, out['status']), (0, 'override'))
         self.assertEqual((ssh / 'example_cluster_key').read_bytes(), other)
 
+    def test_orphan_or_mismatched_public_key_survives(self):
+        other = keypair(self.root, 'other')
+        self.assertNotEqual(other, self.key)
+        ssh = self.home / '.ssh'
+        ssh.mkdir(mode=0o700)
+        key = ssh / 'example_cluster_key'
+        pub = ssh / 'example_cluster_key.pub'
+        original = (self.root / 'other.pub').read_bytes()
+        pub.write_bytes(original)
+        self.assertEqual(self.run_installer(self.key)[0], 1)
+        self.assertFalse(key.exists())
+        key.write_bytes(self.key)
+        self.assertEqual(self.run_installer(self.key)[0], 1)
+        self.assertEqual(pub.read_bytes(), original)
+        self.assertEqual(key.read_bytes(), self.key)
+
     def test_authorized_rotation_replaces_previous_key(self):
         ssh = self.home / '.ssh'
         ssh.mkdir(mode=0o700)

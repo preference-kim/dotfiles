@@ -27,7 +27,7 @@ def fingerprint(path):
     return result.stdout.split()[1]
 
 
-def public_key(private_bytes):
+def inspect_private(private_bytes, *, derive=False):
     state = Path.home() / '.local/state/agent-update'
     state.mkdir(mode=0o700, parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=state) as work:
@@ -35,8 +35,11 @@ def public_key(private_bytes):
         fd = os.open(key, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, 'wb') as stream:
             stream.write(private_bytes)
-        result = subprocess.run(['ssh-keygen', '-y', '-f', str(key)], capture_output=True, check=True)
-        return result.stdout
+        if derive:
+            return subprocess.check_output(['ssh-keygen', '-y', '-P', '', '-f', str(key)],
+                                           stderr=subprocess.PIPE)
+        # No neighbouring .pub can supply the fingerprint of a different file.
+        return fingerprint(key)
 
 
 def main():
@@ -56,10 +59,21 @@ def main():
     pub = key.with_name(key.name + '.pub')
     current = writer.snapshot(key)[0] if key.exists() or key.is_symlink() else None
     current_pub = writer.snapshot(pub)[0] if pub.exists() or pub.is_symlink() else None
-    if current is not None and current != private and fingerprint(key) != replace_fingerprint:
-        print(json.dumps({'status': 'override', 'existing_fingerprint': fingerprint(key)}))
+    public = inspect_private(private, derive=True)
+    wanted = inspect_private(private)
+    previous = inspect_private(current) if current is not None else None
+    if previous is not None and previous != wanted and previous != replace_fingerprint:
+        print(json.dumps({'status': 'override', 'existing_fingerprint': previous}))
         return 0
-    public = public_key(private)
+    if current_pub is not None and current_pub.split()[:2] != public.split()[:2]:
+        # Only an explicitly authorized rotation owns an old matching public half.
+        if not (previous and previous == replace_fingerprint and fingerprint(pub) == previous):
+            print(json.dumps({'status': 'conflict', 'error_type': 'different existing public key'}))
+            return 1
+    if previous == wanted:
+        private = current
+    if current_pub is not None and current_pub.split()[:2] == public.split()[:2]:
+        public = current_pub
     results = [writer.replace(key, current, private, 0o600, allow_create=True),
                writer.replace(pub, current_pub, public, 0o644,
                               allow_create=True)]

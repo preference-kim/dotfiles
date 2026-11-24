@@ -48,6 +48,29 @@ class ProfileTests(unittest.TestCase):
     def test_personal_inventory_does_not_require_hf(self):
         self.assertEqual(self.check(*self.fixture('personal-device')), 'device-a')
 
+    def test_recurring_hosts_require_an_opted_in_personal_owner(self):
+        inv, reg = self.fixture('personal-device')
+        p = inv['profiles']['device-a']
+        self.assertFalse(module.hosts_on_refresh(p))
+        p['hosts_scope']['apply_on_refresh'] = True
+        self.assertEqual(self.check(inv, reg), 'device-a')
+        self.assertTrue(module.hosts_on_refresh(p))
+        for override in [{'device_role': 'development-server'}, {'configuration_owner': 'device-b'},
+                         {'hosts_scope': {'apply_on_refresh': 'true'}}]:
+            with self.subTest(override=override), self.assertRaises(ValueError):
+                module.hosts_on_refresh({**p, **override})
+
+    def test_required_route_checks_real_openssh_key_selection(self):
+        profile = {'ssh_verification': {'required_cluster_key_routes': ['example']}}
+        key = CONFIG['paths']['cluster_key']
+        config = ('Host example\n  IdentityFile ' + key + '\n  IdentityAgent none\n'
+                  '  IdentitiesOnly yes\n  ForwardAgent no\n  StrictHostKeyChecking yes\n')
+        module.check_required_keys(config, profile, key)
+        for wrong in (config.replace(key, '~/.ssh/other'), config + '  IdentityFile ~/.ssh/other\n',
+                      config.replace('IdentityAgent none', 'IdentityAgent SSH_AUTH_SOCK')):
+            with self.subTest(wrong=wrong), self.assertRaises(ValueError):
+                module.check_required_keys(wrong, profile, key)
+
     def test_local_hostname_loopback_is_preserved(self):
         inv, reg = self.fixture()
         import json

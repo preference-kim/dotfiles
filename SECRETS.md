@@ -22,9 +22,10 @@ Every `agent-update` refresh, including a same-day refresh, fetches the approved
 private inventory, synchronizes the registered owner's generated SSH include and
 installs the cluster key the include uses. Missing registration is skipped; a
 delegated profile reports its owner. Source review and bootstrap are requested
-separately. `/etc/hosts` and its cloud-init preservation setting change only on an
-explicit hosts-file request, and HF or GitHub token installation also requires its
-own request. Every refresh installs the discord-relay payload and its plugin on
+separately. Each refresh checks and applies `/etc/hosts` on a personal
+configuration owner whose approved `hosts_scope.apply_on_refresh` is true.
+Other owners require a hosts-file request. A changed system file needs local
+administrator authorization. Cloud-init, HF and GitHub each require explicit scope. Every refresh installs the discord-relay payload and its plugin on
 registered personal devices only; development servers never receive it. Headless servers store the GitHub token in the standard gh credential
 file with mode 0600; Git uses the gh HTTPS credential helper. A shared home has one
 set of keys and a shared writer lock, with hostname-specific profile selection.

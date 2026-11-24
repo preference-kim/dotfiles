@@ -203,6 +203,9 @@
                   },
                   "additionalProperties": false
                 }
+              },
+              "apply_on_refresh": {
+                "type": "boolean"
               }
             }
           },
@@ -298,9 +301,33 @@
                   },
                   "additionalProperties": false
                 }
+              },
+              "required_cluster_key_routes": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+                }
               }
             },
             "additionalProperties": false
+          },
+          "ssh_personal_migrations": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            },
+            "additionalProperties": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
           }
         },
         "oneOf": [
@@ -355,8 +382,40 @@
         "dependentRequired": {
           "ssh_verification": [
             "ssh"
+          ],
+          "ssh_personal_migrations": [
+            "ssh_verification",
+            "ssh"
           ]
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "hosts_scope": {
+                  "properties": {
+                    "apply_on_refresh": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "apply_on_refresh"
+                  ]
+                }
+              },
+              "required": [
+                "hosts_scope"
+              ]
+            },
+            "then": {
+              "properties": {
+                "device_role": {
+                  "const": "personal-device"
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "targets": {
@@ -446,6 +505,10 @@
                   "type": "string",
                   "minLength": 1
                 }
+              },
+              "fallback_jump": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
               }
             },
             "oneOf": [
