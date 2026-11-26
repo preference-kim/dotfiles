@@ -6,6 +6,7 @@ import getpass
 import ipaddress
 import json
 from pathlib import Path
+import re
 import runpy
 import socket
 import sys
@@ -38,6 +39,25 @@ def hosts_on_refresh(profile):
                             'configuration_owner' not in profile),
             'recurring hosts changes require a personal configuration owner')
     return enabled
+
+
+def development_stacks(inventory, registration):
+    if registration['device_role'] != 'development-server':
+        return {}
+    mappings = {registration['expected_hostname']: registration['profile'],
+                **registration.get('host_profiles', {})}
+    stacks = {}
+    for machine, profile_id in mappings.items():
+        profile = inventory['profiles'][profile_id]
+        require(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', machine)
+                and machine == profile['expected_hostname']
+                and profile['account'] == registration['account']
+                and profile['device_role'] == 'development-server',
+                'invalid shared-home development profile')
+        stack = profile.get('development_stack')
+        require(stack in ('TT', 'HAPI', 'None'), 'explicit development stack required')
+        stacks[machine] = stack
+    return stacks
 
 
 def check_required_keys(rendered, profile, key):
@@ -212,7 +232,8 @@ def main():
         profile = data['inventory']['profiles'][selected]
         owner = profile.get('configuration_owner', selected)
         print(json.dumps({'verified': True, 'configuration_owner': owner, 'applies_here': owner == selected,
-                          'apply_hosts_on_refresh': hosts_on_refresh(profile)}))
+                          'apply_hosts_on_refresh': hosts_on_refresh(profile),
+                          'development_stacks': development_stacks(data['inventory'], data['registration'])}))
         return 0
     except (OSError, KeyError, TypeError, ValueError, subprocess.CalledProcessError) as error:
         print(json.dumps({'verified': False, 'error_type': type(error).__name__}))

@@ -2,11 +2,33 @@
 # ~/.bashrc sources this file through one guarded line managed by agent-update.
 [[ $- == *i* ]] || return
 
-export TT_METAL_HOME="$HOME/tt-metal"
-export TT_METAL_RUNTIME_ROOT="$TT_METAL_HOME"
-case ":${PYTHONPATH:-}:" in *":$TT_METAL_HOME:"*) ;; *) export PYTHONPATH="$TT_METAL_HOME:$TT_METAL_HOME/ttnn:$TT_METAL_HOME/tools${PYTHONPATH:+:$PYTHONPATH}" ;; esac
+# A shared home can contain registrations for several physical hosts.
+__dotfiles_development_stack() {
+    local file="$HOME/.config/agent-update/development-stacks" machine name stack
+    [[ -r $file ]] || return 1
+    machine=$(command hostname) || return 1
+    while read -r name stack; do
+        if [[ $name == "$machine" ]]; then
+            case $stack in TT|HAPI|None) printf '%s' "$stack"; return ;; esac
+            return 1
+        fi
+    done < "$file"
+    return 1
+}
+__dotfiles_stack=$(__dotfiles_development_stack) || return 0
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
-alias tt_venv='source "$HOME/tt-metal/python_env/bin/activate"'
+if [[ $__dotfiles_stack == TT ]]; then
+    export TT_METAL_HOME="$HOME/tt-metal"
+    export TT_METAL_RUNTIME_ROOT="$TT_METAL_HOME"
+    for __dotfiles_path in "$TT_METAL_HOME/tools" "$TT_METAL_HOME/ttnn" "$TT_METAL_HOME"; do
+        case ":${PYTHONPATH:-}:" in
+            *":$__dotfiles_path:"*) ;;
+            *) export PYTHONPATH="$__dotfiles_path${PYTHONPATH:+:$PYTHONPATH}" ;;
+        esac
+    done
+    unset __dotfiles_path
+    alias tt_venv='source "$HOME/tt-metal/python_env/bin/activate"'
+fi
 
 # Host labels come from the private inventory; agent-update writes this file.
 __dotfiles_host_label() {
@@ -25,7 +47,11 @@ __dotfiles_server_banner() {
     if [[ -t 1 && ${TERM:-dumb} != dumb ]]; then
         printf '\033[1;36m============================================================\033[0m\n'
         printf '\033[1;33m  %s\033[0m\n' "$label"
-        printf '  %s@%s | TT-Metal: %s\n' "$USER" "$node" "$TT_METAL_HOME"
+        printf '  %s@%s' "$USER" "$node"
+        if [[ $__dotfiles_stack == TT ]]; then
+            printf ' | TT-Metal: %s' "$TT_METAL_HOME"
+        fi
+        printf '\n'
         printf '\033[1;36m============================================================\033[0m\n'
     else
         printf '=== %s | %s@%s ===\n' "$label" "$USER" "$node"

@@ -27,6 +27,22 @@ class ProfileTests(unittest.TestCase):
     def check(self, inv, reg):
         return module.validate(inv, reg, 'machine-a', 'tester', CONFIG)
 
+    def test_explicit_stack_for_each_registered_development_host(self):
+        inv, reg = self.fixture()
+        with self.assertRaises(ValueError):
+            module.development_stacks(inv, reg)
+        inv['profiles']['device-a']['development_stack'] = 'TT'
+        inv['profiles']['device-b'] = dict(inv['profiles']['device-a'], expected_hostname='machine-b',
+                                           development_stack='HAPI', configuration_owner='device-a')
+        reg['host_profiles'] = {'machine-b': 'device-b'}
+        self.assertEqual(module.development_stacks(inv, reg), {'machine-a': 'TT', 'machine-b': 'HAPI'})
+        inv['profiles']['device-b']['development_stack'] = 'None'
+        self.assertEqual(module.development_stacks(inv, reg)['machine-b'], 'None')
+        reg['host_profiles']['unknown'] = 'device-a'
+        with self.assertRaises(ValueError):
+            module.development_stacks(inv, reg)
+        self.assertEqual(module.development_stacks(*self.fixture('personal-device')), {})
+
     def test_file_plan_must_match_configured_destination_not_only_schema_shape(self):
         from test_deployment_config import CONFIG
         inv, reg = self.fixture()

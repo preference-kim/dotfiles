@@ -147,6 +147,9 @@
               "personal-device"
             ]
           },
+          "development_stack": {
+            "enum": ["TT", "HAPI", "None"]
+          },
           "preserved_hosts_blocks": {
             "type": "array",
             "items": {
@@ -611,6 +614,9 @@
         "properties": {
           "profiles": {
             "additionalProperties": {
+              "if": {"properties": {"device_role": {"const": "development-server"}}},
+              "then": {"required": ["development_stack"]},
+              "else": {"not": {"required": ["development_stack"]}},
               "properties": {
                 "files": {
                   "items": {
